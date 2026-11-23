@@ -1,0 +1,29 @@
+# Central de Outreaches MLP
+
+Aplicação local para organizar alunos, criar campanhas de outreach e abrir mensagens personalizadas no WhatsApp Web.
+
+## Como iniciar
+
+1. Instale o Python 3.11 ou mais recente, caso necessário.
+2. Abra o PowerShell nesta pasta.
+3. Execute:
+
+```powershell
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+python app.py
+```
+
+4. Abra `http://127.0.0.1:5000` no navegador.
+
+Os dados ficam no arquivo `data\outreaches.db`. Faça uma cópia periódica desse arquivo como backup. Para parar o sistema, pressione `Ctrl+C` no PowerShell.
+
+## Como usar
+
+- Importe uma planilha `.xlsx` ou `.csv` com os nomes dos alunos. Na importação, informe qual coluna contém os nomes.
+- Preencha o telefone de cada aluno uma única vez na tela **Alunos**.
+- Crie uma campanha e use `{nome}` onde a mensagem deve incluir o primeiro nome do aluno.
+- Em uma campanha, clique em **Abrir WhatsApp**. Confirme o envio no próprio WhatsApp Web e então marque o aluno como enviado no sistema.
+
+O sistema nunca envia mensagens sozinho.
