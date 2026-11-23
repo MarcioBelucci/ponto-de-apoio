@@ -25,5 +25,6 @@ Os dados ficam no arquivo `data\outreaches.db`. Faça uma cópia periódica dess
 - Preencha o telefone de cada aluno uma única vez na tela **Alunos**.
 - Crie uma campanha e use `{nome}` onde a mensagem deve incluir o primeiro nome do aluno.
 - Em uma campanha, clique em **Abrir WhatsApp**. Confirme o envio no próprio WhatsApp Web e então marque o aluno como enviado no sistema.
+- Enquanto a campanha estiver **Em andamento**, alunos adicionados posteriormente serão incluídos nela automaticamente. Ao fim da semana, clique em **Encerrar campanha** para preservar sua lista de destinatários.
 
 O sistema nunca envia mensagens sozinho.

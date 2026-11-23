@@ -54,6 +54,7 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             title TEXT NOT NULL,
             message_template TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'open' CHECK(status IN ('open', 'closed')),
             created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
             archived_at TEXT
         );
@@ -69,6 +70,9 @@ def init_db():
             FOREIGN KEY(student_id) REFERENCES students(id)
         );
     """)
+    campaign_columns = {row[1] for row in db.execute("PRAGMA table_info(campaigns)")}
+    if "status" not in campaign_columns:
+        db.execute("ALTER TABLE campaigns ADD COLUMN status TEXT NOT NULL DEFAULT 'open'")
     db.commit()
 
 
@@ -85,6 +89,16 @@ def campaign_or_404(campaign_id):
     if not campaign:
         return None
     return campaign
+
+
+def add_student_to_open_campaigns(db, student_id):
+    """Inclui um aluno novo em campanhas que ainda aceitam destinatários."""
+    cursor = db.execute("""
+        INSERT OR IGNORE INTO sends (campaign_id, student_id)
+        SELECT id, ? FROM campaigns
+        WHERE status = 'open' AND archived_at IS NULL
+    """, (student_id,))
+    return cursor.rowcount
 
 
 @app.route("/")
@@ -113,10 +127,13 @@ def add_student():
     if not full_name:
         flash("Informe o nome completo do aluno.", "error")
         return redirect(url_for("students"))
-    get_db().execute("INSERT INTO students (full_name, first_name, phone, email, program, notes) VALUES (?, ?, ?, ?, ?, ?)",
+    db = get_db()
+    cursor = db.execute("INSERT INTO students (full_name, first_name, phone, email, program, notes) VALUES (?, ?, ?, ?, ?, ?)",
         (full_name, first_name(full_name), clean_phone(request.form.get("phone")), request.form.get("email", "").strip(), request.form.get("program", "BIU MLP").strip() or "BIU MLP", request.form.get("notes", "").strip()))
-    get_db().commit()
-    flash("Aluno adicionado.", "success")
+    linked = add_student_to_open_campaigns(db, cursor.lastrowid)
+    db.commit()
+    suffix = f" Incluído em {linked} campanha(s) em andamento." if linked else ""
+    flash(f"Aluno adicionado.{suffix}", "success")
     return redirect(url_for("students"))
 
 
@@ -191,7 +208,8 @@ def confirm_import():
         if not normalized or normalized.casefold() in existing:
             skipped += 1
             continue
-        db.execute("INSERT INTO students (full_name, first_name) VALUES (?, ?)", (normalized, first_name(normalized)))
+        cursor = db.execute("INSERT INTO students (full_name, first_name) VALUES (?, ?)", (normalized, first_name(normalized)))
+        add_student_to_open_campaigns(db, cursor.lastrowid)
         existing.add(normalized.casefold())
         added += 1
     db.commit()
@@ -249,6 +267,39 @@ def set_send_status(campaign_id, student_id):
     get_db().execute("UPDATE sends SET status=?, opened_at=CASE WHEN ?='opened' THEN ? ELSE opened_at END, sent_at=CASE WHEN ?='sent' THEN ? ELSE sent_at END WHERE campaign_id=? AND student_id=?", (status, status, now, status, now, campaign_id, student_id))
     get_db().commit()
     flash("Situação atualizada.", "success")
+    return redirect(url_for("campaign_detail", campaign_id=campaign_id))
+
+
+@app.post("/campaigns/<int:campaign_id>/sync")
+def sync_campaign(campaign_id):
+    campaign = campaign_or_404(campaign_id)
+    if not campaign:
+        flash("Campanha não encontrada.", "error")
+        return redirect(url_for("campaigns"))
+    if campaign["status"] != "open":
+        flash("Apenas campanhas em andamento podem receber alunos novos.", "error")
+        return redirect(url_for("campaign_detail", campaign_id=campaign_id))
+    db = get_db()
+    cursor = db.execute("""
+        INSERT OR IGNORE INTO sends (campaign_id, student_id)
+        SELECT ?, id FROM students WHERE active = 1
+    """, (campaign_id,))
+    db.commit()
+    flash(f"Sincronização concluída: {cursor.rowcount} aluno(s) novo(s) incluído(s).", "success")
+    return redirect(url_for("campaign_detail", campaign_id=campaign_id))
+
+
+@app.post("/campaigns/<int:campaign_id>/status")
+def set_campaign_status(campaign_id):
+    status = request.form.get("status")
+    if status not in {"open", "closed"}:
+        flash("Situação inválida.", "error")
+        return redirect(url_for("campaign_detail", campaign_id=campaign_id))
+    db = get_db()
+    db.execute("UPDATE campaigns SET status=? WHERE id=? AND archived_at IS NULL", (status, campaign_id))
+    db.commit()
+    message = "Campanha reaberta. Alunos novos voltarão a ser incluídos automaticamente." if status == "open" else "Campanha encerrada. O histórico foi preservado e novos alunos não serão incluídos."
+    flash(message, "success")
     return redirect(url_for("campaign_detail", campaign_id=campaign_id))
 
 
