@@ -4,20 +4,20 @@
 
 {% block content %}
   <div class="page-heading">
-    <div><p class="eyebrow">Campanha · {{ 'Em andamento' if campaign.status == 'open' else 'Encerrada' }}</p><h1>{{ campaign.title }}</h1><p>Abra o WhatsApp, envie após revisar e então confirme no sistema.</p></div>
+    <div><p class="eyebrow">Outreach · {{ 'Em andamento' if campaign.status == 'open' else 'Encerrado' }}</p><h1>{{ campaign.title }}</h1><p>Abra o WhatsApp, envie após revisar e então confirme no sistema.</p></div>
     <div class="campaign-actions">
       {% if campaign.status == 'open' %}
         <form class="inline" method="post" action="{{ url_for('sync_campaign', campaign_id=campaign.id) }}"><button class="button">Adicionar alunos novos</button></form>
-        <form class="inline" method="post" action="{{ url_for('set_campaign_status', campaign_id=campaign.id) }}" onsubmit="return confirm('Encerrar esta campanha? Novos alunos não serão adicionados automaticamente.');"><input type="hidden" name="status" value="closed"><button class="button">Encerrar campanha</button></form>
+        <form class="inline" method="post" action="{{ url_for('set_campaign_status', campaign_id=campaign.id) }}" onsubmit="return confirm('Encerrar este outreach? Novos alunos não serão adicionados automaticamente.');"><input type="hidden" name="status" value="closed"><button class="button">Encerrar outreach</button></form>
       {% else %}
-        <form class="inline" method="post" action="{{ url_for('set_campaign_status', campaign_id=campaign.id) }}"><input type="hidden" name="status" value="open"><button class="button primary">Reabrir campanha</button></form>
+        <form class="inline" method="post" action="{{ url_for('set_campaign_status', campaign_id=campaign.id) }}"><input type="hidden" name="status" value="open"><button class="button primary">Reabrir outreach</button></form>
       {% endif %}
-      <form class="inline" method="post" action="{{ url_for('archive_campaign', campaign_id=campaign.id) }}" onsubmit="return confirm('Arquivar esta campanha? O histórico será preservado.');"><button class="button danger">Arquivar campanha</button></form>
+      <form class="inline" method="post" action="{{ url_for('archive_campaign', campaign_id=campaign.id) }}" onsubmit="return confirm('Arquivar este outreach? O histórico será preservado.');"><button class="button danger">Arquivar outreach</button></form>
     </div>
   </div>
 
   <section class="panel message" aria-labelledby="message-title"><h2 id="message-title">Mensagem-base</h2><pre>{{ campaign.message_template }}</pre></section>
-  <section class="panel" aria-label="Destinatários da campanha">
+  <section class="panel" aria-label="Destinatários do outreach">
     <table>
       <thead><tr><th scope="col">Aluno</th><th scope="col">Prévia</th><th scope="col">Situação</th><th scope="col">Ações</th></tr></thead>
       <tbody>

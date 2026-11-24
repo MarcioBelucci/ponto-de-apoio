@@ -1,4 +1,4 @@
-"""Rotas de criação, acompanhamento e envio de campanhas."""
+"""Rotas de criação, acompanhamento e envio de outreaches."""
 
 from datetime import datetime
 from urllib.parse import quote
@@ -19,7 +19,7 @@ from ponto_apoio.services.campaigns import (
 
 
 def register_campaign_routes(app):
-    """Registra as rotas de campanhas e destinatários."""
+    """Registra as rotas de outreaches e destinatários."""
 
     @app.route("/campaigns")
     def campaigns():
@@ -32,12 +32,12 @@ def register_campaign_routes(app):
         title = request.form.get("title", "").strip()
         message_template = request.form.get("message_template", "").strip()
         if not title or not message_template:
-            flash("Informe o título e a mensagem da campanha.", "error")
+            flash("Informe o título e a mensagem do outreach.", "error")
             return render_template("campaign_form.html", title=title, message_template=message_template)
         db = get_db()
         campaign_id = create_campaign(db, title, message_template)
         db.commit()
-        flash("Campanha criada.", "success")
+        flash("Outreach criado.", "success")
         return redirect(url_for("campaign_detail", campaign_id=campaign_id))
 
     @app.route("/campaigns/<int:campaign_id>")
@@ -45,7 +45,7 @@ def register_campaign_routes(app):
         db = get_db()
         campaign = campaign_by_id(db, campaign_id)
         if not campaign:
-            flash("Campanha não encontrada.", "error")
+            flash("Outreach não encontrado.", "error")
             return redirect(url_for("campaigns"))
         return render_template(
             "campaign_detail.html",
@@ -71,10 +71,10 @@ def register_campaign_routes(app):
         db = get_db()
         campaign = campaign_by_id(db, campaign_id)
         if not campaign:
-            flash("Campanha não encontrada.", "error")
+            flash("Outreach não encontrado.", "error")
             return redirect(url_for("campaigns"))
         if campaign["status"] != "open":
-            flash("Apenas campanhas em andamento podem receber alunos novos.", "error")
+            flash("Apenas outreaches em andamento podem receber alunos novos.", "error")
             return redirect(url_for("campaign_detail", campaign_id=campaign_id))
         added = sync_campaign(db, campaign_id)
         db.commit()
@@ -90,7 +90,7 @@ def register_campaign_routes(app):
         db = get_db()
         update_campaign_status(db, campaign_id, status)
         db.commit()
-        message = "Campanha reaberta. Alunos novos voltarão a ser incluídos automaticamente." if status == "open" else "Campanha encerrada. O histórico foi preservado e novos alunos não serão incluídos."
+        message = "Outreach reaberto. Alunos novos voltarão a ser incluídos automaticamente." if status == "open" else "Outreach encerrado. O histórico foi preservado e novos alunos não serão incluídos."
         flash(message, "success")
         return redirect(url_for("campaign_detail", campaign_id=campaign_id))
 
@@ -99,5 +99,5 @@ def register_campaign_routes(app):
         db = get_db()
         archive_campaign(db, campaign_id, datetime.now().isoformat(timespec="seconds"))
         db.commit()
-        flash("Campanha arquivada. O histórico foi preservado.", "success")
+        flash("Outreach arquivado. O histórico foi preservado.", "success")
         return redirect(url_for("campaigns"))

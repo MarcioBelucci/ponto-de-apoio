@@ -9,7 +9,7 @@
       <h1 id="page-title">Organize seus outreaches sem perder o contato humano.</h1>
       <p>Prepare mensagens personalizadas e abra cada conversa no WhatsApp Desktop.</p>
     </div>
-    <a class="button primary" href="{{ url_for('new_campaign') }}">Nova campanha</a>
+    <a class="button primary" href="{{ url_for('new_campaign') }}">Novo outreach</a>
   </section>
 
   <section class="cards" aria-label="Resumo de alunos">
@@ -21,14 +21,14 @@
   <section class="panel" aria-labelledby="recent-campaigns-title">
     <div class="section-title">
       <div>
-        <h2 id="recent-campaigns-title">Campanhas recentes</h2>
+        <h2 id="recent-campaigns-title">Outreaches recentes</h2>
         <p>Veja rapidamente o andamento dos seus envios.</p>
       </div>
       <a href="{{ url_for('campaigns') }}">Ver todas</a>
     </div>
     {% if campaigns %}
       <table>
-        <thead><tr><th scope="col">Campanha</th><th scope="col">Progresso</th><th scope="col"><span class="sr-only">Ações</span></th></tr></thead>
+        <thead><tr><th scope="col">Outreach</th><th scope="col">Progresso</th><th scope="col"><span class="sr-only">Ações</span></th></tr></thead>
         <tbody>
           {% for campaign in campaigns %}
             <tr><td><strong>{{ campaign.title }}</strong><br><small>{{ campaign.created_at[:10] }}</small></td><td>{{ campaign.sent or 0 }} de {{ campaign.total }} enviados</td><td><a class="button small" href="{{ url_for('campaign_detail', campaign_id=campaign.id) }}">Abrir</a></td></tr>
@@ -36,7 +36,7 @@
         </tbody>
       </table>
     {% else %}
-      <div class="empty">Ainda não há campanhas. <a href="{{ url_for('new_campaign') }}">Crie a primeira.</a></div>
+      <div class="empty">Ainda não há outreaches. <a href="{{ url_for('new_campaign') }}">Crie o primeiro.</a></div>
     {% endif %}
   </section>
 {% endblock %}

@@ -27,7 +27,7 @@ def list_active_students(db):
 
 
 def add_student(db, full_name, phone="", email="", program="BIU MLP", notes=""):
-    """Cria um aluno e o inclui nas campanhas em andamento."""
+    """Cria um aluno e o inclui nos outreaches em andamento."""
     normalized_name = " ".join(full_name.strip().split())
     cursor = db.execute(
         """

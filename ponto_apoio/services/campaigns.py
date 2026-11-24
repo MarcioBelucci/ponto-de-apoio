@@ -1,4 +1,4 @@
-"""Regras de negócio para campanhas e envios."""
+"""Regras de negócio para outreaches e envios."""
 
 
 def campaign_by_id(db, campaign_id):
@@ -8,7 +8,7 @@ def campaign_by_id(db, campaign_id):
 
 
 def add_student_to_open_campaigns(db, student_id):
-    """Inclui um aluno em todas as campanhas abertas, sem duplicar envios."""
+    """Inclui um aluno em todos os outreaches abertos, sem duplicar envios."""
     cursor = db.execute(
         """
         INSERT OR IGNORE INTO sends (campaign_id, student_id)
@@ -37,7 +37,7 @@ def list_campaigns(db, limit=None):
 
 
 def create_campaign(db, title, message_template):
-    """Cria uma campanha e atribui os alunos ativos existentes."""
+    """Cria um outreach e atribui os alunos ativos existentes."""
     cursor = db.execute(
         "INSERT INTO campaigns (title, message_template) VALUES (?, ?)",
         (title, message_template),
@@ -81,7 +81,7 @@ def set_send_status(db, campaign_id, student_id, status, timestamp):
 
 
 def sync_campaign(db, campaign_id):
-    """Inclui todos os alunos ativos que ainda não estão na campanha."""
+    """Inclui todos os alunos ativos que ainda não estão no outreach."""
     cursor = db.execute(
         """
         INSERT OR IGNORE INTO sends (campaign_id, student_id)

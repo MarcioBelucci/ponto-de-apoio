@@ -1,6 +1,6 @@
 # Central de Outreaches MLP
 
-Aplicação local para organizar alunos, criar campanhas de outreach e abrir mensagens personalizadas no WhatsApp Web.
+Aplicação local para organizar alunos, criar outreaches e abrir mensagens personalizadas no WhatsApp Desktop.
 
 ## Como iniciar
 
@@ -23,8 +23,8 @@ Os dados ficam no arquivo `data\outreaches.db`. Faça uma cópia periódica dess
 
 - Importe uma planilha `.xlsx` ou `.csv` com os nomes dos alunos. Na importação, informe qual coluna contém os nomes.
 - Preencha o telefone de cada aluno uma única vez na tela **Alunos**.
-- Crie uma campanha e use `{nome}` onde a mensagem deve incluir o primeiro nome do aluno.
-- Em uma campanha, use **Abrir no WhatsApp** para abrir a conversa no aplicativo WhatsApp Desktop instalado no Windows. A alternativa Web permanece disponível no menu **Mais**. Confirme o envio no próprio WhatsApp e então marque o aluno como enviado no sistema.
-- Enquanto a campanha estiver **Em andamento**, alunos adicionados posteriormente serão incluídos nela automaticamente. Ao fim da semana, clique em **Encerrar campanha** para preservar sua lista de destinatários.
+- Crie um outreach e use `{nome}` onde a mensagem deve incluir o primeiro nome do aluno.
+- Em um outreach, use **Abrir no WhatsApp** para abrir a conversa no aplicativo WhatsApp Desktop instalado no Windows. A alternativa Web permanece disponível no menu **Mais**. Confirme o envio no próprio WhatsApp e então marque o aluno como enviado no sistema.
+- Enquanto o outreach estiver **Em andamento**, alunos adicionados posteriormente serão incluídos nele automaticamente. Ao fim da semana, clique em **Encerrar outreach** para preservar sua lista de destinatários.
 
 O sistema nunca envia mensagens sozinho.

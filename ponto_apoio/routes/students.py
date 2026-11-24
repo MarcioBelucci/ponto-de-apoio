@@ -40,7 +40,7 @@ def register_student_routes(app):
             request.form.get("notes", ""),
         )
         db.commit()
-        suffix = f" Incluído em {linked} campanha(s) em andamento." if linked else ""
+        suffix = f" Incluído em {linked} outreach(es) em andamento." if linked else ""
         flash(f"Aluno adicionado.{suffix}", "success")
         return redirect(url_for("students"))
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Organize alunos, campanhas e contatos de mentoria MLP.">
+  <meta name="description" content="Organize alunos, outreaches e contatos de mentoria MLP.">
   <meta name="author" content="Ponto de Apoio">
   <title>{% block title %}Ponto de Apoio{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
@@ -15,7 +15,7 @@
     <nav aria-label="Navegação principal">
       <a href="{{ url_for('dashboard') }}">Início</a>
       <a href="{{ url_for('students') }}">Alunos</a>
-      <a href="{{ url_for('campaigns') }}">Campanhas</a>
+      <a href="{{ url_for('campaigns') }}">Outreaches</a>
       <a href="{{ url_for('import_students') }}">Importar planilha</a>
     </nav>
   </header>
