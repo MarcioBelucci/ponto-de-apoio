@@ -1,6 +1,42 @@
-{% extends 'base.html' %}{% block title %}Início · Central de Outreaches{% endblock %}{% block content %}
-<section class="hero"><div><p class="eyebrow">Acompanhamento semanal</p><h1>Organize seus outreaches sem perder o contato humano.</h1><p>Prepare mensagens personalizadas e abra cada conversa no WhatsApp Web.</p></div><a class="button primary" href="{{ url_for('new_campaign') }}">Nova campanha</a></section>
-<section class="cards"><div class="card"><strong>{{ total_students }}</strong><span>alunos ativos</span></div><div class="card"><strong>{{ phone_ready }}</strong><span>com telefone cadastrado</span></div><div class="card"><strong>{{ total_students - phone_ready }}</strong><span>aguardando telefone</span></div></section>
-<section class="panel"><div class="section-title"><div><h2>Campanhas recentes</h2><p>Veja rapidamente o andamento dos seus envios.</p></div><a href="{{ url_for('campaigns') }}">Ver todas</a></div>
-{% if campaigns %}<table><thead><tr><th>Campanha</th><th>Progresso</th><th></th></tr></thead><tbody>{% for c in campaigns %}<tr><td><strong>{{ c.title }}</strong><br><small>{{ c.created_at[:10] }}</small></td><td>{{ c.sent or 0 }} de {{ c.total }} enviados</td><td><a class="button small" href="{{ url_for('campaign_detail', campaign_id=c.id) }}">Abrir</a></td></tr>{% endfor %}</tbody></table>{% else %}<div class="empty">Ainda não há campanhas. <a href="{{ url_for('new_campaign') }}">Crie a primeira.</a></div>{% endif %}</section>
+{% extends 'base.html' %}
+
+{% block title %}Início · Ponto de Apoio{% endblock %}
+
+{% block content %}
+  <section class="hero" aria-labelledby="page-title">
+    <div>
+      <p class="eyebrow">Acompanhamento semanal</p>
+      <h1 id="page-title">Organize seus outreaches sem perder o contato humano.</h1>
+      <p>Prepare mensagens personalizadas e abra cada conversa no WhatsApp Desktop.</p>
+    </div>
+    <a class="button primary" href="{{ url_for('new_campaign') }}">Nova campanha</a>
+  </section>
+
+  <section class="cards" aria-label="Resumo de alunos">
+    <article class="card"><strong>{{ total_students }}</strong><span>alunos ativos</span></article>
+    <article class="card"><strong>{{ phone_ready }}</strong><span>com telefone cadastrado</span></article>
+    <article class="card"><strong>{{ total_students - phone_ready }}</strong><span>aguardando telefone</span></article>
+  </section>
+
+  <section class="panel" aria-labelledby="recent-campaigns-title">
+    <div class="section-title">
+      <div>
+        <h2 id="recent-campaigns-title">Campanhas recentes</h2>
+        <p>Veja rapidamente o andamento dos seus envios.</p>
+      </div>
+      <a href="{{ url_for('campaigns') }}">Ver todas</a>
+    </div>
+    {% if campaigns %}
+      <table>
+        <thead><tr><th scope="col">Campanha</th><th scope="col">Progresso</th><th scope="col"><span class="sr-only">Ações</span></th></tr></thead>
+        <tbody>
+          {% for campaign in campaigns %}
+            <tr><td><strong>{{ campaign.title }}</strong><br><small>{{ campaign.created_at[:10] }}</small></td><td>{{ campaign.sent or 0 }} de {{ campaign.total }} enviados</td><td><a class="button small" href="{{ url_for('campaign_detail', campaign_id=campaign.id) }}">Abrir</a></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="empty">Ainda não há campanhas. <a href="{{ url_for('new_campaign') }}">Crie a primeira.</a></div>
+    {% endif %}
+  </section>
 {% endblock %}

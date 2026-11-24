@@ -1,4 +1,53 @@
-{% extends 'base.html' %}{% block title %}Alunos · Central de Outreaches{% endblock %}{% block content %}
-<div class="page-heading"><div><p class="eyebrow">Base de contatos</p><h1>Alunos</h1><p>Cadastre telefones uma única vez para reutilizá-los nas campanhas.</p></div><a class="button" href="{{ url_for('import_students') }}">Importar planilha</a></div>
-<details class="panel add"><summary>+ Adicionar aluno manualmente</summary><form method="post" action="{{ url_for('add_student') }}" class="form-grid"><label>Nome completo<input required name="full_name"></label><label>Telefone<input name="phone" placeholder="5511999999999"></label><label>E-mail<input type="email" name="email"></label><label>Programa<input name="program" value="BIU MLP"></label><label class="wide">Observações<textarea name="notes" rows="2"></textarea></label><div><button class="button primary">Salvar aluno</button></div></form></details>
-<section class="panel"><div class="section-title"><div><h2>{{ students|length }} aluno(s) ativo(s)</h2></div></div>{% if students %}<table><thead><tr><th>Aluno</th><th>Telefone</th><th>Programa</th><th>Ações</th></tr></thead><tbody>{% for s in students %}<tr><td><strong>{{ s.full_name }}</strong>{% if s.email %}<br><small>{{ s.email }}</small>{% endif %}</td><td>{{ s.phone or 'Pendente' }}</td><td>{{ s.program }}</td><td><details class="inline"><summary class="button small">Editar</summary><form method="post" action="{{ url_for('edit_student', student_id=s.id) }}" class="edit-form"><input name="full_name" value="{{ s.full_name }}" required><input name="phone" value="{{ s.phone or '' }}" placeholder="Telefone"><input name="email" value="{{ s.email or '' }}" placeholder="E-mail"><input name="program" value="{{ s.program }}"><textarea name="notes" placeholder="Observações">{{ s.notes or '' }}</textarea><button class="button primary small">Salvar</button></form></details><form class="inline" method="post" action="{{ url_for('archive_student', student_id=s.id) }}" onsubmit="return confirm('Arquivar este aluno? O histórico será preservado.');"><button class="button danger small">Arquivar</button></form></td></tr>{% endfor %}</tbody></table>{% else %}<div class="empty">Importe uma planilha ou adicione o primeiro aluno.</div>{% endif %}</section>{% endblock %}
+{% extends 'base.html' %}
+
+{% block title %}Alunos · Ponto de Apoio{% endblock %}
+
+{% block content %}
+  <div class="page-heading">
+    <div><p class="eyebrow">Base de contatos</p><h1>Alunos</h1><p>Cadastre telefones uma única vez para reutilizá-los nas campanhas.</p></div>
+    <a class="button" href="{{ url_for('import_students') }}">Importar planilha</a>
+  </div>
+
+  <details class="panel add"><summary>Adicionar aluno manualmente</summary>
+    <form method="post" action="{{ url_for('add_student') }}" class="form-grid">
+      <label>Nome completo<input required name="full_name"></label>
+      <label>Telefone<input name="phone" placeholder="5511999999999"></label>
+      <label>E-mail<input type="email" name="email"></label>
+      <label>Programa<input name="program" value="BIU MLP"></label>
+      <label class="wide">Observações<textarea name="notes" rows="2"></textarea></label>
+      <div><button class="button primary">Salvar aluno</button></div>
+    </form>
+  </details>
+
+  <section class="panel" aria-labelledby="active-students-title">
+    <div class="section-title"><div><h2 id="active-students-title">{{ students|length }} aluno(s) ativo(s)</h2></div></div>
+    {% if students %}
+      <table>
+        <thead><tr><th scope="col">Aluno</th><th scope="col">Telefone</th><th scope="col">Programa</th><th scope="col">Ações</th></tr></thead>
+        <tbody>
+          {% for student in students %}
+            <tr>
+              <td><strong>{{ student.full_name }}</strong>{% if student.email %}<br><small>{{ student.email }}</small>{% endif %}</td>
+              <td>{{ student.phone or 'Pendente' }}</td><td>{{ student.program }}</td>
+              <td>
+                <details class="inline"><summary class="button small">Editar</summary>
+                  <form method="post" action="{{ url_for('edit_student', student_id=student.id) }}" class="edit-form">
+                    <label>Nome completo<input name="full_name" value="{{ student.full_name }}" required></label>
+                    <label>Telefone<input name="phone" value="{{ student.phone or '' }}"></label>
+                    <label>E-mail<input name="email" value="{{ student.email or '' }}"></label>
+                    <label>Programa<input name="program" value="{{ student.program }}"></label>
+                    <label>Observações<textarea name="notes">{{ student.notes or '' }}</textarea></label>
+                    <button class="button primary small">Salvar</button>
+                  </form>
+                </details>
+                <form class="inline" method="post" action="{{ url_for('archive_student', student_id=student.id) }}" onsubmit="return confirm('Arquivar este aluno? O histórico será preservado.');"><button class="button danger small">Arquivar</button></form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="empty">Importe uma planilha ou adicione o primeiro aluno.</div>
+    {% endif %}
+  </section>
+{% endblock %}

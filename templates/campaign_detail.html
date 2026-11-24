@@ -1,4 +1,40 @@
-{% extends 'base.html' %}{% block title %}{{ campaign.title }} · Central de Outreaches{% endblock %}{% block content %}
-<div class="page-heading"><div><p class="eyebrow">Campanha · {{ 'Em andamento' if campaign.status == 'open' else 'Encerrada' }}</p><h1>{{ campaign.title }}</h1><p>Use “Abrir WhatsApp”, envie após revisar e então confirme no sistema.</p></div><div class="campaign-actions">{% if campaign.status == 'open' %}<form class="inline" method="post" action="{{ url_for('sync_campaign', campaign_id=campaign.id) }}"><button class="button">Adicionar alunos novos</button></form><form class="inline" method="post" action="{{ url_for('set_campaign_status', campaign_id=campaign.id) }}" onsubmit="return confirm('Encerrar esta campanha? Novos alunos não serão adicionados automaticamente.');"><input type="hidden" name="status" value="closed"><button class="button">Encerrar campanha</button></form>{% else %}<form class="inline" method="post" action="{{ url_for('set_campaign_status', campaign_id=campaign.id) }}"><input type="hidden" name="status" value="open"><button class="button primary">Reabrir campanha</button></form>{% endif %}<form class="inline" method="post" action="{{ url_for('archive_campaign', campaign_id=campaign.id) }}" onsubmit="return confirm('Arquivar esta campanha? O histórico será preservado.');"><button class="button danger">Arquivar campanha</button></form></div></div>
-<section class="panel message"><h2>Mensagem-base</h2><pre>{{ campaign.message_template }}</pre></section>
-<section class="panel"><table><thead><tr><th>Aluno</th><th>Prévia</th><th>Situação</th><th>Ações</th></tr></thead><tbody>{% for s in students %}{% set text = campaign.message_template.replace('{nome}', s.first_name) %}<tr><td><strong>{{ s.full_name }}</strong><br><small>{{ s.phone or 'Telefone pendente' }}</small></td><td class="preview-text">{{ text }}</td><td><span class="badge {{ s.status }}">{{ {'pending':'Pendente','opened':'Aberto','sent':'Enviado','skip':'Não enviar'}[s.status] }}</span></td><td>{% if s.phone %}<a class="button primary small" target="whatsapp_outreach" href="https://web.whatsapp.com/send?phone={{ s.phone }}&text={{ quote(text) }}">Abrir WhatsApp</a>{% endif %}<form class="inline" method="post" action="{{ url_for('set_send_status', campaign_id=campaign.id, student_id=s.id) }}"><input type="hidden" name="status" value="sent"><button class="button small">Marcar enviado</button></form><details class="inline"><summary class="button small">Mais</summary><form method="post" action="{{ url_for('set_send_status', campaign_id=campaign.id, student_id=s.id) }}" class="status-form"><button name="status" value="pending">Pendente</button><button name="status" value="opened">Aberto</button><button name="status" value="skip">Não enviar</button></form></details></td></tr>{% endfor %}</tbody></table></section>{% endblock %}
+{% extends 'base.html' %}
+
+{% block title %}{{ campaign.title }} · Ponto de Apoio{% endblock %}
+
+{% block content %}
+  <div class="page-heading">
+    <div><p class="eyebrow">Campanha · {{ 'Em andamento' if campaign.status == 'open' else 'Encerrada' }}</p><h1>{{ campaign.title }}</h1><p>Abra o WhatsApp, envie após revisar e então confirme no sistema.</p></div>
+    <div class="campaign-actions">
+      {% if campaign.status == 'open' %}
+        <form class="inline" method="post" action="{{ url_for('sync_campaign', campaign_id=campaign.id) }}"><button class="button">Adicionar alunos novos</button></form>
+        <form class="inline" method="post" action="{{ url_for('set_campaign_status', campaign_id=campaign.id) }}" onsubmit="return confirm('Encerrar esta campanha? Novos alunos não serão adicionados automaticamente.');"><input type="hidden" name="status" value="closed"><button class="button">Encerrar campanha</button></form>
+      {% else %}
+        <form class="inline" method="post" action="{{ url_for('set_campaign_status', campaign_id=campaign.id) }}"><input type="hidden" name="status" value="open"><button class="button primary">Reabrir campanha</button></form>
+      {% endif %}
+      <form class="inline" method="post" action="{{ url_for('archive_campaign', campaign_id=campaign.id) }}" onsubmit="return confirm('Arquivar esta campanha? O histórico será preservado.');"><button class="button danger">Arquivar campanha</button></form>
+    </div>
+  </div>
+
+  <section class="panel message" aria-labelledby="message-title"><h2 id="message-title">Mensagem-base</h2><pre>{{ campaign.message_template }}</pre></section>
+  <section class="panel" aria-label="Destinatários da campanha">
+    <table>
+      <thead><tr><th scope="col">Aluno</th><th scope="col">Prévia</th><th scope="col">Situação</th><th scope="col">Ações</th></tr></thead>
+      <tbody>
+        {% for student in students %}
+          {% set text = campaign.message_template.replace('{nome}', student.first_name) %}
+          <tr>
+            <td><strong>{{ student.full_name }}</strong><br><small>{{ student.phone or 'Telefone pendente' }}</small></td>
+            <td class="preview-text">{{ text }}</td>
+            <td><span class="badge {{ student.status }}">{{ {'pending':'Pendente','opened':'Aberto','sent':'Enviado','skip':'Não enviar'}[student.status] }}</span></td>
+            <td>
+              {% if student.phone %}<a class="button primary small" href="whatsapp://send?phone={{ student.phone }}&text={{ quote(text) }}">Abrir no WhatsApp</a>{% endif %}
+              <form class="inline" method="post" action="{{ url_for('set_send_status', campaign_id=campaign.id, student_id=student.id) }}"><input type="hidden" name="status" value="sent"><button class="button small">Marcar enviado</button></form>
+              <details class="inline"><summary class="button small">Mais</summary><div class="status-form"><a class="button small" target="whatsapp_outreach" href="https://web.whatsapp.com/send?phone={{ student.phone }}&text={{ quote(text) }}">Abrir no Web</a><form method="post" action="{{ url_for('set_send_status', campaign_id=campaign.id, student_id=student.id) }}"><button name="status" value="pending">Pendente</button><button name="status" value="opened">Aberto</button><button name="status" value="skip">Não enviar</button></form></div></details>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+{% endblock %}
