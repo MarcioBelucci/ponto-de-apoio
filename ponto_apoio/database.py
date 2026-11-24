@@ -38,6 +38,13 @@ CREATE TABLE IF NOT EXISTS sends (
     FOREIGN KEY(campaign_id) REFERENCES campaigns(id),
     FOREIGN KEY(student_id) REFERENCES students(id)
 );
+CREATE TABLE IF NOT EXISTS weekly_goals (
+    week_start TEXT NOT NULL,
+    day INTEGER NOT NULL CHECK(day BETWEEN 0 AND 3),
+    target INTEGER NOT NULL CHECK(target >= 0),
+    completed INTEGER NOT NULL DEFAULT 0 CHECK(completed >= 0),
+    PRIMARY KEY (week_start, day)
+);
 """
 
 

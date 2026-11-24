@@ -9,6 +9,18 @@
   --red: #933835;
 }
 
+.weekly-panel { margin-bottom: 1.9rem; }
+.today-goal { padding: 1rem; border-radius: 0.5rem; background: var(--soft); }
+.goal-row { display: grid; grid-template-columns: minmax(12rem, 2fr) minmax(6rem, 1fr) auto; gap: 1rem; align-items: center; padding: 0.9rem 0; border-bottom: 1px solid var(--line); }
+.goal-row progress { width: 100%; accent-color: var(--green); }
+.goal-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.goal-settings { margin-top: 1rem; }
+.goal-settings summary { cursor: pointer; font-weight: 700; }
+.goal-targets { display: flex; flex-wrap: wrap; gap: 1rem; align-items: end; margin-top: 1rem; }
+.goal-targets label { max-width: 10rem; }
+button:disabled { opacity: 0.55; cursor: not-allowed; }
+@media (max-width: 720px) { .goal-row { grid-template-columns: 1fr; } }
+
 * {
   box-sizing: border-box;
 }

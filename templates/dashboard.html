@@ -12,6 +12,47 @@
     <a class="button primary" href="{{ url_for('new_campaign') }}">Novo outreach</a>
   </section>
 
+  <section class="panel weekly-panel" id="weekly-goals" aria-labelledby="weekly-title">
+    <div class="section-title">
+      <div><h2 id="weekly-title">Metas da semana</h2><p>Semana de {{ week.strftime('%d/%m/%Y') }}{% if week != current_week %} · Histórico{% endif %}</p></div>
+      <div><a href="{{ url_for('dashboard', week=previous_week.isoformat()) }}#weekly-goals">Semana anterior</a>{% if week < current_week %} · <a href="{{ url_for('dashboard', week=next_week.isoformat()) }}#weekly-goals">Próxima semana</a>{% endif %}</div>
+    </div>
+    {% if goals %}
+      {% set total_target = goals | sum(attribute='target') %}
+      {% set totals = namespace(done=0) %}
+      {% for goal in goals %}{% set totals.done = totals.done + [goal.completed, goal.target] | min %}{% endfor %}
+      {% set total_done = totals.done %}
+      <p><strong>{{ total_done }} de {{ total_target }} atividades registradas</strong> · Faltam {{ [total_target - total_done, 0] | max }}</p>
+      {% if week == current_week %}
+        {% if today_index < 4 %}
+          {% set today = goals[today_index] %}
+          <p class="today-goal"><strong>Hoje · {{ today.day_name }}:</strong> {{ today.activity }} — {{ today.completed }} de {{ today.target }}. Faltam {{ [today.target - today.completed, 0] | max }}.</p>
+        {% else %}
+          <p class="today-goal">Hoje não há uma meta diária definida. Você pode registrar atividades da semana abaixo.</p>
+        {% endif %}
+      {% endif %}
+      <div class="goal-list">
+        {% for goal in goals %}
+          <article class="goal-row">
+            <div><strong>{{ goal.day_name }}</strong><br>{{ goal.activity }}<br><small>{{ goal.completed }} de {{ goal.target }} · Faltam {{ [goal.target - goal.completed, 0] | max }}{% if goal.completed > goal.target %} · {{ goal.completed - goal.target }} acima da meta{% endif %}</small></div>
+            <progress max="{{ goal.target if goal.target else 1 }}" value="{{ [goal.completed, goal.target] | min }}" aria-label="Progresso de {{ goal.day_name }}"></progress>
+            {% if week == current_week %}
+              <div class="goal-actions">
+                <form method="post" action="{{ url_for('update_weekly_count') }}"><input type="hidden" name="day" value="{{ goal.day }}"><input type="hidden" name="delta" value="1"><button class="button primary small" {% if goal.completed >= goal.target %}disabled{% endif %}>{{ 'Meta atingida' if goal.completed >= goal.target else 'Registrar envio' }}</button></form>
+                <form method="post" action="{{ url_for('update_weekly_count') }}"><input type="hidden" name="day" value="{{ goal.day }}"><input type="hidden" name="delta" value="-1"><button class="button small" {% if goal.completed == 0 %}disabled{% endif %}>Desfazer</button></form>
+              </div>
+            {% endif %}
+          </article>
+        {% endfor %}
+      </div>
+      {% if week == current_week %}
+        <details class="goal-settings"><summary>Editar metas desta semana</summary><form method="post" action="{{ url_for('update_weekly_targets') }}" class="goal-targets">{% for goal in goals %}<label>{{ goal.day_name }}<input type="number" name="target_{{ goal.day }}" value="{{ goal.target }}" min="0" max="999" required></label>{% endfor %}<button class="button">Salvar metas</button></form></details>
+      {% endif %}
+    {% else %}
+      <p>Nenhuma atividade registrada para esta semana.</p>
+    {% endif %}
+  </section>
+
   <section class="cards" aria-label="Resumo de alunos">
     <article class="card"><strong>{{ total_students }}</strong><span>alunos ativos</span></article>
     <article class="card"><strong>{{ phone_ready }}</strong><span>com telefone cadastrado</span></article>
