@@ -38,15 +38,15 @@
             <progress max="{{ goal.target if goal.target else 1 }}" value="{{ [goal.completed, goal.target] | min }}" aria-label="Progresso de {{ goal.day_name }}"></progress>
             {% if week == current_week %}
               <div class="goal-actions">
-                <form method="post" action="{{ url_for('update_weekly_count') }}"><input type="hidden" name="day" value="{{ goal.day }}"><input type="hidden" name="delta" value="1"><button class="button primary small" {% if goal.completed >= goal.target %}disabled{% endif %}>{{ 'Meta atingida' if goal.completed >= goal.target else 'Registrar envio' }}</button></form>
-                <form method="post" action="{{ url_for('update_weekly_count') }}"><input type="hidden" name="day" value="{{ goal.day }}"><input type="hidden" name="delta" value="-1"><button class="button small" {% if goal.completed == 0 %}disabled{% endif %}>Desfazer</button></form>
+                <form method="post" action="{{ url_for('update_weekly_count') }}"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="day" value="{{ goal.day }}"><input type="hidden" name="delta" value="1"><button class="button primary small" {% if goal.completed >= goal.target %}disabled{% endif %}>{{ 'Meta atingida' if goal.completed >= goal.target else 'Registrar envio' }}</button></form>
+                <form method="post" action="{{ url_for('update_weekly_count') }}"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="day" value="{{ goal.day }}"><input type="hidden" name="delta" value="-1"><button class="button small" {% if goal.completed == 0 %}disabled{% endif %}>Desfazer</button></form>
               </div>
             {% endif %}
           </article>
         {% endfor %}
       </div>
       {% if week == current_week %}
-        <details class="goal-settings"><summary>Editar metas desta semana</summary><form method="post" action="{{ url_for('update_weekly_targets') }}" class="goal-targets">{% for goal in goals %}<label>{{ goal.day_name }}<input type="number" name="target_{{ goal.day }}" value="{{ goal.target }}" min="0" max="999" required></label>{% endfor %}<button class="button">Salvar metas</button></form></details>
+        <details class="goal-settings"><summary>Editar metas desta semana</summary><form method="post" action="{{ url_for('update_weekly_targets') }}" class="goal-targets"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">{% for goal in goals %}<label>{{ goal.day_name }}<input type="number" name="target_{{ goal.day }}" value="{{ goal.target }}" min="0" max="999" required></label>{% endfor %}<button class="button">Salvar metas</button></form></details>
       {% endif %}
     {% else %}
       <p>Nenhuma atividade registrada para esta semana.</p>

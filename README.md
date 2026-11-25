@@ -29,6 +29,8 @@ Os dados ficam no arquivo `data\outreaches.db`. Faça uma cópia periódica dess
 
 O sistema nunca envia mensagens sozinho.
 
+Por padrão, a chave de sessão é gerada ao iniciar o sistema. Ao reiniciar, atualize as páginas abertas antes de enviar formulários. Para manter a sessão entre reinícios, configure a variável de ambiente `OUTREACHES_SECRET` com uma chave longa e aleatória, mantida em segredo.
+
 ## Testes
 
 Com o ambiente virtual ativado e as dependências instaladas, execute antes de cada alteração:

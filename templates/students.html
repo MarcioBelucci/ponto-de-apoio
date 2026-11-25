@@ -9,7 +9,7 @@
   </div>
 
   <details class="panel add"><summary>Adicionar aluno manualmente</summary>
-    <form method="post" action="{{ url_for('add_student') }}" class="form-grid">
+    <form method="post" action="{{ url_for('add_student') }}" class="form-grid"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
       <label>Nome completo<input required name="full_name"></label>
       <label>Telefone<input name="phone" placeholder="5511999999999"></label>
       <label>E-mail<input type="email" name="email"></label>
@@ -31,7 +31,7 @@
               <td>{{ student.phone or 'Pendente' }}</td><td>{{ student.program }}</td>
               <td>
                 <details class="inline"><summary class="button small">Editar</summary>
-                  <form method="post" action="{{ url_for('edit_student', student_id=student.id) }}" class="edit-form">
+                  <form method="post" action="{{ url_for('edit_student', student_id=student.id) }}" class="edit-form"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                     <label>Nome completo<input name="full_name" value="{{ student.full_name }}" required></label>
                     <label>Telefone<input name="phone" value="{{ student.phone or '' }}"></label>
                     <label>E-mail<input name="email" value="{{ student.email or '' }}"></label>
@@ -40,7 +40,7 @@
                     <button class="button primary small">Salvar</button>
                   </form>
                 </details>
-                <form class="inline" method="post" action="{{ url_for('archive_student', student_id=student.id) }}" onsubmit="return confirm('Arquivar este aluno? O histórico será preservado.');"><button class="button danger small">Arquivar</button></form>
+                <form class="inline" method="post" action="{{ url_for('archive_student', student_id=student.id) }}" onsubmit="return confirm('Arquivar este aluno? O histórico será preservado.');"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><button class="button danger small">Arquivar</button></form>
               </td>
             </tr>
           {% endfor %}
