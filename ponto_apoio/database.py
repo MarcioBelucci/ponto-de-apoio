@@ -45,6 +45,11 @@ CREATE TABLE IF NOT EXISTS weekly_goals (
     completed INTEGER NOT NULL DEFAULT 0 CHECK(completed >= 0),
     PRIMARY KEY (week_start, day)
 );
+CREATE TABLE IF NOT EXISTS pending_imports (
+    token TEXT PRIMARY KEY,
+    rows_json TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 """
 
 
