@@ -5,7 +5,7 @@ from datetime import date
 from ponto_apoio.database import SCHEMA
 from ponto_apoio.services.campaigns import create_campaign, set_campaign_status
 from ponto_apoio.services.students import add_student, import_students, clean_phone, duplicate_student
-from ponto_apoio.services.weekly_goals import change_count, ensure_week
+from ponto_apoio.services.weekly_goals import add_contact, remove_contact, week_summary, change_count, ensure_week
 
 
 class ServiceTests(unittest.TestCase):
@@ -54,6 +54,33 @@ class ServiceTests(unittest.TestCase):
         student = duplicate_student(self.db, '  ANA   silva ')
         self.assertIsNotNone(student)
         self.assertIsNone(duplicate_student(self.db, 'Ana Silva', student['id']))
+
+    def test_weekly_contacts_allow_followups_and_preserve_old_counts(self):
+        week = date(2026, 11, 23)
+        ensure_week(self.db, week)
+        change_count(self.db, week, 0, 1)
+        add_student(self.db, 'João Silva')
+        student_id = self.db.execute('SELECT id FROM students').fetchone()[0]
+        self.assertTrue(add_contact(self.db, week, 0, student_id))
+        self.assertFalse(add_contact(self.db, week, 0, student_id))
+        self.assertTrue(add_contact(self.db, week, 2, student_id))
+        goals = week_summary(self.db, week)
+        self.assertEqual((goals[0]['completed'], goals[0]['legacy']), (2, 1))
+        self.assertEqual(goals[2]['completed'], 1)
+        contact_id = goals[0]['contacts'][0]['id']
+        self.assertFalse(remove_contact(self.db, date(2026, 11, 16), contact_id))
+        self.assertTrue(remove_contact(self.db, week, contact_id))
+        self.assertEqual(week_summary(self.db, week)[0]['completed'], 1)
+
+    def test_contacts_cannot_exceed_daily_target(self):
+        week = date(2026, 11, 23)
+        ensure_week(self.db, week)
+        for name in ('Ana', 'Bruno', 'Clara', 'Daniel'):
+            add_student(self.db, name)
+            student_id = self.db.execute('SELECT id FROM students WHERE full_name=?', (name,)).fetchone()[0]
+            self.assertEqual(add_contact(self.db, week, 2, student_id), name != 'Daniel')
+        goal = week_summary(self.db, week)[2]
+        self.assertEqual((goal['completed'], goal['target']), (3, 3))
 
 
 if __name__ == '__main__':

@@ -32,6 +32,7 @@ Para restaurar, pare o sistema com `Ctrl+C`. Na pasta `data`, renomeie `outreach
 - Crie um outreach e use `{nome}` onde a mensagem deve incluir o primeiro nome do aluno.
 - Em um outreach, use **Abrir no WhatsApp** para abrir a conversa no aplicativo WhatsApp Desktop instalado no Windows. A alternativa Web permanece disponível no menu **Mais**. Confirme o envio no próprio WhatsApp e então marque o aluno como enviado no sistema.
 - Enquanto o outreach estiver **Em andamento**, alunos adicionados posteriormente serão incluídos nele automaticamente. Ao fim da semana, clique em **Encerrar outreach** para preservar sua lista de destinatários.
+- Nas metas da semana, selecione o aluno para registrar cada contato. O mesmo aluno pode aparecer em atividades diferentes; cada aluno conta uma vez por atividade da semana. Os registros antigos sem aluno identificado permanecem no total. Esses registros são manuais e independentes do estado dos outreaches.
 
 O sistema nunca envia mensagens sozinho.
 

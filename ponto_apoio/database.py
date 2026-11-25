@@ -50,6 +50,15 @@ CREATE TABLE IF NOT EXISTS pending_imports (
     rows_json TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+CREATE TABLE IF NOT EXISTS weekly_contacts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    week_start TEXT NOT NULL,
+    day INTEGER NOT NULL CHECK(day BETWEEN 0 AND 3),
+    student_id INTEGER NOT NULL REFERENCES students(id),
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(week_start, day, student_id),
+    FOREIGN KEY(week_start, day) REFERENCES weekly_goals(week_start, day)
+);
 """
 
 

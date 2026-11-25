@@ -6,7 +6,8 @@ from flask import flash, redirect, render_template, request, url_for
 
 from ponto_apoio.database import get_db
 from ponto_apoio.services.campaigns import list_campaigns
-from ponto_apoio.services.weekly_goals import change_count, ensure_week, monday, set_targets, week_summary
+from ponto_apoio.services.students import list_active_students
+from ponto_apoio.services.weekly_goals import add_contact, remove_contact, ensure_week, monday, set_targets, week_summary
 
 
 def register_dashboard_routes(app):
@@ -43,6 +44,7 @@ def register_dashboard_routes(app):
             phone_ready=phone_ready,
             campaigns=list_campaigns(db, limit=5),
             goals=goals,
+            students=list_active_students(db),
             week=week,
             current_week=current_week,
             today_index=today.weekday(),
@@ -50,12 +52,12 @@ def register_dashboard_routes(app):
             next_week=week + timedelta(days=7),
         )
 
-    @app.post("/weekly-goals/count")
-    def update_weekly_count():
+    @app.post("/weekly-goals/contact")
+    def add_weekly_contact():
         try:
             day = int(request.form.get("day", ""))
-            delta = int(request.form.get("delta", ""))
-            if day not in range(4) or delta not in (-1, 1):
+            student_id = int(request.form.get("student_id", ""))
+            if day not in range(4) or student_id <= 0:
                 raise ValueError
         except ValueError:
             flash("Não foi possível atualizar a atividade.", "error")
@@ -63,10 +65,20 @@ def register_dashboard_routes(app):
         db = get_db()
         week = monday(date.today())
         ensure_week(db, week)
-        changed = change_count(db, week, day, delta)
+        changed = add_contact(db, week, day, student_id)
         db.commit()
         if not changed:
-            flash("A meta já foi atingida ou não há registro para desfazer.", "error")
+            flash("Meta já atingida, aluno inválido ou já registrado nesta atividade da semana.", "error")
+        else:
+            flash("Contato registrado.", "success")
+        return redirect(url_for("dashboard") + "#weekly-goals")
+
+    @app.post('/weekly-goals/contact/<int:contact_id>/remove')
+    def remove_weekly_contact(contact_id):
+        db = get_db()
+        changed = remove_contact(db, monday(date.today()), contact_id)
+        db.commit()
+        flash("Registro removido." if changed else "Registro não encontrado nesta semana.", "success" if changed else "error")
         return redirect(url_for("dashboard") + "#weekly-goals")
 
     @app.post("/weekly-goals/targets")

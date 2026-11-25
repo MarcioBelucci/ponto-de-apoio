@@ -19,10 +19,10 @@
     </div>
     {% if goals %}
       {% set total_target = goals | sum(attribute='target') %}
-      {% set totals = namespace(done=0) %}
-      {% for goal in goals %}{% set totals.done = totals.done + [goal.completed, goal.target] | min %}{% endfor %}
-      {% set total_done = totals.done %}
-      <p><strong>{{ total_done }} de {{ total_target }} atividades registradas</strong> · Faltam {{ [total_target - total_done, 0] | max }}</p>
+      {% set totals = namespace(remaining=0) %}
+      {% for goal in goals %}{% set totals.remaining = totals.remaining + [goal.target - goal.completed, 0] | max %}{% endfor %}
+      {% set total_done = goals | sum(attribute='completed') %}
+      <p><strong>{{ total_done }} atividades registradas</strong> · Meta total: {{ total_target }} · Faltam {{ totals.remaining }} nas metas diárias</p>
       {% if week == current_week %}
         {% if today_index < 4 %}
           {% set today = goals[today_index] %}
@@ -38,10 +38,13 @@
             <progress max="{{ goal.target if goal.target else 1 }}" value="{{ [goal.completed, goal.target] | min }}" aria-label="Progresso de {{ goal.day_name }}"></progress>
             {% if week == current_week %}
               <div class="goal-actions">
-                <form method="post" action="{{ url_for('update_weekly_count') }}"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="day" value="{{ goal.day }}"><input type="hidden" name="delta" value="1"><button class="button primary small" {% if goal.completed >= goal.target %}disabled{% endif %}>{{ 'Meta atingida' if goal.completed >= goal.target else 'Registrar envio' }}</button></form>
-                <form method="post" action="{{ url_for('update_weekly_count') }}"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="day" value="{{ goal.day }}"><input type="hidden" name="delta" value="-1"><button class="button small" {% if goal.completed == 0 %}disabled{% endif %}>Desfazer</button></form>
+                <form method="post" action="{{ url_for('add_weekly_contact') }}"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="day" value="{{ goal.day }}"><label>Aluno<select name="student_id" required {% if not students or goal.completed >= goal.target %}disabled{% endif %}><option value="">{{ 'Meta atingida' if goal.completed >= goal.target else 'Selecione o aluno' }}</option>{% for student in students %}<option value="{{ student.id }}">{{ student.full_name }}</option>{% endfor %}</select></label><button class="button primary small" {% if not students or goal.completed >= goal.target %}disabled{% endif %}>{{ 'Meta atingida' if goal.completed >= goal.target else 'Registrar contato' }}</button></form>
               </div>
             {% endif %}
+            <div class="goal-contacts">
+              {% if goal.legacy %}<p><small>{{ goal.legacy }} registro(s) anterior(es) sem aluno identificado.</small></p>{% endif %}
+              {% if goal.contacts %}<details><summary>{{ goal.contacts|length }} aluno(s) registrado(s)</summary><ul>{% for contact in goal.contacts %}<li>{{ contact.full_name }}{% if not contact.active %} (arquivado){% endif %}{% if week == current_week %} <form class="inline" method="post" action="{{ url_for('remove_weekly_contact', contact_id=contact.id) }}"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><button class="button small">Remover</button></form>{% endif %}</li>{% endfor %}</ul></details>{% endif %}
+            </div>
           </article>
         {% endfor %}
       </div>
