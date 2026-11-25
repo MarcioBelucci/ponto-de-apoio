@@ -8,6 +8,7 @@ from flask import Flask, abort, request, session
 
 from ponto_apoio.database import init_app as init_database
 from ponto_apoio.routes.campaigns import register_campaign_routes
+from ponto_apoio.routes.backup import register_backup_routes
 from ponto_apoio.routes.dashboard import register_dashboard_routes
 from ponto_apoio.routes.students import register_student_routes
 
@@ -46,4 +47,5 @@ def create_app():
     register_dashboard_routes(app)
     register_student_routes(app)
     register_campaign_routes(app)
+    register_backup_routes(app)
     return app

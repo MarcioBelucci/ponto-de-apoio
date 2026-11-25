@@ -17,7 +17,13 @@ python app.py
 
 4. Abra `http://127.0.0.1:5000` no navegador.
 
-Os dados ficam no arquivo `data\outreaches.db`. Faça uma cópia periódica desse arquivo como backup. Para parar o sistema, pressione `Ctrl+C` no PowerShell.
+Os dados ficam no arquivo `data\outreaches.db`. Para parar o sistema, pressione `Ctrl+C` no PowerShell.
+
+## Backup e restauração
+
+Na página **Backup**, baixe periodicamente uma cópia e guarde-a em local seguro, preferencialmente fora deste computador. O backup contém dados pessoais e histórico de contatos.
+
+Para restaurar, pare o sistema com `Ctrl+C`. Na pasta `data`, renomeie `outreaches.db` para preservar a versão atual. Copie o arquivo de backup para essa pasta e renomeie a cópia para `outreaches.db`. Inicie o sistema novamente e confira os dados. A restauração volta os dados ao momento da criação do backup; alterações posteriores não estarão nele. Não substitua o arquivo com o sistema aberto.
 
 ## Como usar
 

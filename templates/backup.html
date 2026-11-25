@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block title %}Backup · Ponto de Apoio{% endblock %}
+{% block content %}
+  <div class="page-heading"><div><p class="eyebrow">Proteção dos dados</p><h1>Backup</h1><p>Baixe uma cópia dos alunos, outreaches e metas para guardar em local seguro.</p></div></div>
+  <section class="panel narrow">
+    <form method="post" action="{{ url_for('download_backup') }}"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><button class="button primary">Baixar backup</button></form>
+    <h2>Como restaurar</h2>
+    <p>Pare o sistema. Na pasta <code>data</code>, renomeie <code>outreaches.db</code> para guardar a versão atual. Copie o backup para essa pasta, renomeie a cópia para <code>outreaches.db</code> e inicie o sistema novamente.</p>
+    <p>Restaurar uma cópia substitui os dados em uso pelos dados que existiam quando ela foi criada. Guarde os arquivos de backup em local protegido.</p>
+  </section>
+{% endblock %}
