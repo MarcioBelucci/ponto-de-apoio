@@ -383,6 +383,30 @@ textarea {
   color: #445048;
 }
 
+.message-preview summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.message-preview summary::-webkit-details-marker { display: none; }
+.preview-snippet {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.preview-expand, .preview-collapse {
+  display: block;
+  margin-top: 0.3rem;
+  color: var(--green-dark);
+  font-weight: 700;
+}
+.preview-collapse, .message-preview[open] .preview-snippet,
+.message-preview[open] .preview-expand { display: none; }
+.message-preview[open] .preview-collapse { display: block; }
+.preview-full { overflow-wrap: anywhere; }
+
 .badge {
   display: inline-block;
   padding: 0.2rem 0.55rem;

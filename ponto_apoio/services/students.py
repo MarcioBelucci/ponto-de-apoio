@@ -36,16 +36,22 @@ def duplicate_student(db, full_name, exclude_id=None):
                  if row['id'] != exclude_id and ' '.join(row['full_name'].split()).casefold() == normalized), None)
 
 
-def list_active_students(db, search=""):
+def normalize_search(value):
+    return ''.join(c for c in unicodedata.normalize('NFKD', value.casefold())
+                   if not unicodedata.combining(c))
+
+
+def list_students(db, search="", archived=False):
     students = db.execute(
-        "SELECT * FROM students WHERE active = 1 ORDER BY full_name COLLATE NOCASE"
+        "SELECT * FROM students WHERE active = ? ORDER BY full_name COLLATE NOCASE", (0 if archived else 1,)
     ).fetchall()
-    def normalize(value):
-        return ''.join(c for c in unicodedata.normalize('NFKD', value.casefold())
-                       if not unicodedata.combining(c))
-    terms = normalize(search).split()
+    terms = normalize_search(search).split()
     return [student for student in students
-            if all(term in normalize(student['full_name']) for term in terms)]
+            if all(term in normalize_search(student['full_name']) for term in terms)]
+
+
+def list_active_students(db, search=""):
+    return list_students(db, search)
 
 
 def add_student(db, full_name, phone="", email="", program="BIU MLP", notes=""):

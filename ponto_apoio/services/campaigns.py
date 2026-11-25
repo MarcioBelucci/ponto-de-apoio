@@ -1,9 +1,9 @@
 """Regras de negócio para outreaches e envios."""
 
 
-def campaign_by_id(db, campaign_id):
+def campaign_by_id(db, campaign_id, include_archived=False):
     return db.execute(
-        "SELECT * FROM campaigns WHERE id = ? AND archived_at IS NULL", (campaign_id,)
+        "SELECT * FROM campaigns WHERE id = ? AND (archived_at IS NULL OR ? = 1)", (campaign_id, include_archived)
     ).fetchone()
 
 
@@ -20,20 +20,25 @@ def add_student_to_open_campaigns(db, student_id):
     return cursor.rowcount
 
 
-def list_campaigns(db, limit=None):
+def list_campaigns(db, limit=None, status="all", archived=False, search=""):
+    from ponto_apoio.services.students import normalize_search
     query = """
         SELECT c.*, COUNT(s.id) AS total,
                SUM(CASE WHEN s.status = 'sent' THEN 1 ELSE 0 END) AS sent
         FROM campaigns c
         LEFT JOIN sends s ON s.campaign_id = c.id
-        WHERE c.archived_at IS NULL
+        WHERE (c.archived_at IS NOT NULL) = ? AND (? = 'all' OR c.status = ?)
         GROUP BY c.id
         ORDER BY c.created_at DESC
     """
-    if limit is not None:
+    params = [int(archived), status, status]
+    if limit is not None and not search:
         query += " LIMIT ?"
-        return db.execute(query, (limit,)).fetchall()
-    return db.execute(query).fetchall()
+        params.append(limit)
+    rows = db.execute(query, params).fetchall()
+    terms = normalize_search(search).split()
+    rows = [row for row in rows if all(term in normalize_search(row['title']) for term in terms)]
+    return rows[:limit] if limit is not None else rows
 
 
 def create_campaign(db, title, message_template):

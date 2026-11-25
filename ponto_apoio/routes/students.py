@@ -16,6 +16,7 @@ from ponto_apoio.services.students import (
     duplicate_student,
     import_students,
     list_active_students,
+    list_students,
     read_sheet,
     update_student,
 )
@@ -27,7 +28,8 @@ def register_student_routes(app):
     @app.route("/students")
     def students():
         search = request.args.get("q", "").strip()
-        return render_template("students.html", students=list_active_students(get_db(), search), search=search)
+        archived = request.args.get("view") == "archived"
+        return render_template("students.html", students=list_students(get_db(), search, archived), search=search, archived=archived)
 
     @app.post("/students", endpoint="add_student")
     def add_student_route():

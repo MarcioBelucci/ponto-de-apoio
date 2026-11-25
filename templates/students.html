@@ -8,7 +8,7 @@
     <a class="button" href="{{ url_for('import_students') }}">Importar planilha</a>
   </div>
 
-  <details class="panel add"><summary>Adicionar aluno manualmente</summary>
+  {% if not archived %}<details class="panel add"><summary>Adicionar aluno manualmente</summary>
     <form method="post" action="{{ url_for('add_student') }}" class="form-grid"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
       <label>Nome completo<input required name="full_name"></label>
       <label>Telefone (com DDI e DDD)<input name="phone" placeholder="5511999999999" inputmode="tel"></label>
@@ -17,11 +17,12 @@
       <label class="wide">Observações<textarea name="notes" rows="2"></textarea></label>
       <div><button class="button primary">Salvar aluno</button></div>
     </form>
-  </details>
+  </details>{% endif %}
 
   <section class="panel" aria-labelledby="active-students-title">
-    <form method="get" action="{{ url_for('students') }}" class="student-search"><label for="student-search">Pesquisar aluno por nome</label><input id="student-search" type="search" name="q" value="{{ search }}" placeholder="Digite o nome"><button class="button" type="submit">Pesquisar</button>{% if search %} <a class="button" href="{{ url_for('students') }}">Limpar pesquisa</a>{% endif %}</form>
-    <div class="section-title"><div><h2 id="active-students-title">{{ students|length }} aluno(s) ativo(s){% if search %} encontrado(s){% endif %}</h2></div></div>
+    <p><a href="{{ url_for('students') }}">Alunos ativos</a> · <a href="{{ url_for('students', view='archived') }}">Alunos arquivados</a></p>
+    <form method="get" action="{{ url_for('students') }}" class="student-search">{% if archived %}<input type="hidden" name="view" value="archived">{% endif %}<label for="student-search">Pesquisar aluno por nome</label><input id="student-search" type="search" name="q" value="{{ search }}" placeholder="Digite o nome"><button class="button" type="submit">Pesquisar</button>{% if search %} <a class="button" href="{{ url_for('students', view='archived' if archived else None) }}">Limpar pesquisa</a>{% endif %}</form>
+    <div class="section-title"><div><h2 id="active-students-title">{{ students|length }} aluno(s) {{ 'arquivado(s)' if archived else 'ativo(s)' }}{% if search %} encontrado(s){% endif %}</h2></div></div>
     {% if students %}
       <table>
         <thead><tr><th scope="col">Aluno</th><th scope="col">Telefone</th><th scope="col">Programa</th><th scope="col">Ações</th></tr></thead>
@@ -31,6 +32,7 @@
               <td><strong>{{ student.full_name }}</strong>{% if student.email %}<br><small>{{ student.email }}</small>{% endif %}</td>
               <td>{{ student.phone or 'Pendente' }}</td><td>{{ student.program }}</td>
               <td>
+                {% if archived %}<small>Arquivado em {{ student.archived_at[:10] if student.archived_at else 'data não informada' }}</small>{% if student.notes %}<br><small>Observações: {{ student.notes }}</small>{% endif %}{% else %}
                 <details class="inline"><summary class="button small">Editar</summary>
                   <form method="post" action="{{ url_for('edit_student', student_id=student.id) }}" class="edit-form"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                     <label>Nome completo<input name="full_name" value="{{ student.full_name }}" required></label>
@@ -42,13 +44,14 @@
                   </form>
                 </details>
                 <form class="inline" method="post" action="{{ url_for('archive_student', student_id=student.id) }}" onsubmit="return confirm('Arquivar este aluno? O histórico será preservado.');"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><button class="button danger small">Arquivar</button></form>
+                {% endif %}
               </td>
             </tr>
           {% endfor %}
         </tbody>
       </table>
     {% else %}
-      <div class="empty">{% if search %}Nenhum aluno encontrado para esta pesquisa.{% else %}Importe uma planilha ou adicione o primeiro aluno.{% endif %}</div>
+      <div class="empty">{% if search %}Nenhum aluno encontrado para esta pesquisa.{% elif archived %}Nenhum aluno arquivado.{% else %}Importe uma planilha ou adicione o primeiro aluno.{% endif %}</div>
     {% endif %}
   </section>
 {% endblock %}

@@ -3,8 +3,8 @@ import unittest
 from datetime import date
 
 from ponto_apoio.database import SCHEMA
-from ponto_apoio.services.campaigns import create_campaign, set_campaign_status
-from ponto_apoio.services.students import add_student, import_students, clean_phone, duplicate_student, list_active_students, archive_student
+from ponto_apoio.services.campaigns import create_campaign, set_campaign_status, archive_campaign, list_campaigns, campaign_by_id
+from ponto_apoio.services.students import add_student, import_students, clean_phone, duplicate_student, list_active_students, list_students, archive_student
 from ponto_apoio.services.weekly_goals import add_contact, remove_contact, week_summary, change_count, ensure_week
 
 
@@ -58,6 +58,19 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual([s['full_name'] for s in list_active_students(self.db, ' SILVA joao ')], ['João da Silva'])
         self.assertEqual(len(list_active_students(self.db, '')), 2)
         self.assertEqual(list_active_students(self.db, 'inexistente'), [])
+        self.assertEqual([s['full_name'] for s in list_students(self.db, 'joao', archived=True)], ['João Arquivado'])
+
+    def test_campaign_filters_and_archived_lookup(self):
+        first = create_campaign(self.db, 'Matrícula de João', 'Olá')
+        second = create_campaign(self.db, 'Convite semanal', 'Olá')
+        third = create_campaign(self.db, 'Matrícula antiga', 'Olá')
+        set_campaign_status(self.db, second, 'closed')
+        archive_campaign(self.db, third, '2026-11-25')
+        self.assertEqual([c['id'] for c in list_campaigns(self.db, search='JOAO matricula')], [first])
+        self.assertEqual([c['id'] for c in list_campaigns(self.db, status='closed')], [second])
+        self.assertEqual([c['id'] for c in list_campaigns(self.db, archived=True)], [third])
+        self.assertIsNone(campaign_by_id(self.db, third))
+        self.assertEqual(campaign_by_id(self.db, third, include_archived=True)['id'], third)
 
     def test_duplicate_names_ignore_case_and_extra_spaces(self):
         add_student(self.db, 'Ana Silva')

@@ -8,17 +8,19 @@
     <a class="button primary" href="{{ url_for('new_campaign') }}">Novo outreach</a>
   </div>
   <section class="panel">
+    <p><a href="{{ url_for('campaigns') }}">Outreaches ativos</a> · <a href="{{ url_for('campaigns', view='archived') }}">Outreaches arquivados</a></p>
+    <form method="get" action="{{ url_for('campaigns') }}">{% if archived %}<input type="hidden" name="view" value="archived">{% endif %}<label>Título<input type="search" name="q" value="{{ search }}" placeholder="Pesquisar título"></label><label>Situação<select name="status"><option value="all" {% if status == 'all' %}selected{% endif %}>Todas</option><option value="open" {% if status == 'open' %}selected{% endif %}>Em andamento</option><option value="closed" {% if status == 'closed' %}selected{% endif %}>Encerrado</option></select></label><button class="button">Filtrar</button> <a class="button" href="{{ url_for('campaigns', view='archived' if archived else None) }}">Limpar filtros</a></form>
     {% if campaigns %}
       <table>
         <thead><tr><th scope="col">Outreach</th><th scope="col">Situação</th><th scope="col">Progresso</th><th scope="col">Criado em</th><th scope="col"><span class="sr-only">Ações</span></th></tr></thead>
         <tbody>
           {% for campaign in campaigns %}
-            <tr><td><strong>{{ campaign.title }}</strong><br><small>{{ campaign.message_template[:85] }}{% if campaign.message_template|length > 85 %}…{% endif %}</small></td><td><span class="badge {{ campaign.status }}">{{ 'Em andamento' if campaign.status == 'open' else 'Encerrada' }}</span></td><td>{{ campaign.sent or 0 }} de {{ campaign.total }} enviados</td><td>{{ campaign.created_at[:10] }}</td><td><a class="button small" href="{{ url_for('campaign_detail', campaign_id=campaign.id) }}">Abrir</a></td></tr>
+            <tr><td><strong>{{ campaign.title }}</strong><br><small>{{ campaign.message_template[:85] }}{% if campaign.message_template|length > 85 %}…{% endif %}</small></td><td><span class="badge {{ campaign.status }}">{{ 'Em andamento' if campaign.status == 'open' else 'Encerrado' }}</span></td><td>{{ campaign.sent or 0 }} de {{ campaign.total }} enviados</td><td>{{ campaign.created_at[:10] }}</td><td><a class="button small" href="{{ url_for('archived_campaign_detail' if archived else 'campaign_detail', campaign_id=campaign.id) }}">Abrir</a></td></tr>
           {% endfor %}
         </tbody>
       </table>
     {% else %}
-      <div class="empty">Nenhum outreach criado.</div>
+      <div class="empty">Nenhum outreach encontrado.</div>
     {% endif %}
   </section>
 {% endblock %}

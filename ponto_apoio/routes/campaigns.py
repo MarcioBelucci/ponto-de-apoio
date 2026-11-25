@@ -23,7 +23,21 @@ def register_campaign_routes(app):
 
     @app.route("/campaigns")
     def campaigns():
-        return render_template("campaigns.html", campaigns=list_campaigns(get_db()))
+        search = request.args.get('q', '').strip()
+        status = request.args.get('status', 'all')
+        if status not in {'all', 'open', 'closed'}:
+            status = 'all'
+        archived = request.args.get('view') == 'archived'
+        return render_template("campaigns.html", campaigns=list_campaigns(get_db(), status=status, archived=archived, search=search), search=search, status=status, archived=archived)
+
+    @app.get('/campaigns/<int:campaign_id>/archive-view')
+    def archived_campaign_detail(campaign_id):
+        db = get_db()
+        campaign = campaign_by_id(db, campaign_id, include_archived=True)
+        if not campaign or not campaign['archived_at']:
+            flash('Outreach arquivado não encontrado.', 'error')
+            return redirect(url_for('campaigns', view='archived'))
+        return render_template('archived_campaign.html', campaign=campaign, students=list_campaign_students(db, campaign_id))
 
     @app.route("/campaigns/new", methods=["GET", "POST"])
     def new_campaign():
