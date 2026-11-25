@@ -9,6 +9,8 @@ from ponto_apoio.database import get_db
 from ponto_apoio.services.students import (
     add_student,
     archive_student,
+    clean_phone,
+    duplicate_student,
     import_students,
     list_active_students,
     read_sheet,
@@ -31,6 +33,12 @@ def register_student_routes(app):
             return redirect(url_for("students"))
 
         db = get_db()
+        try:
+            clean_phone(request.form.get("phone", ""))
+        except ValueError as error:
+            flash(str(error), "error")
+            return redirect(url_for("students"))
+        duplicate = duplicate_student(db, full_name)
         linked = add_student(
             db,
             full_name,
@@ -40,6 +48,8 @@ def register_student_routes(app):
             request.form.get("notes", ""),
         )
         db.commit()
+        if duplicate:
+            flash("Aviso: já existe outro aluno ativo com esse nome. Confira se os cadastros correspondem a pessoas diferentes.", "error")
         suffix = f" Incluído em {linked} outreach(es) em andamento." if linked else ""
         flash(f"Aluno adicionado.{suffix}", "success")
         return redirect(url_for("students"))
@@ -52,12 +62,20 @@ def register_student_routes(app):
             return redirect(url_for("students"))
 
         db = get_db()
+        try:
+            clean_phone(request.form.get("phone", ""))
+        except ValueError as error:
+            flash(str(error), "error")
+            return redirect(url_for("students"))
+        duplicate = duplicate_student(db, full_name, student_id)
         update_student(
             db, student_id, full_name, request.form.get("phone", ""),
             request.form.get("email", ""), request.form.get("program", "BIU MLP"),
             request.form.get("notes", ""),
         )
         db.commit()
+        if duplicate:
+            flash("Aviso: já existe outro aluno ativo com esse nome. Confira se os cadastros correspondem a pessoas diferentes.", "error")
         flash("Dados do aluno atualizados.", "success")
         return redirect(url_for("students"))
 

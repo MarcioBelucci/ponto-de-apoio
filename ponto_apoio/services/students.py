@@ -16,8 +16,23 @@ def first_name(name):
 
 
 def clean_phone(value):
-    """Mantém somente os números de um telefone internacional."""
-    return re.sub(r"\D", "", value or "")
+    """Valida um telefone opcional em formato internacional para o WhatsApp."""
+    value = (value or "").strip()
+    if not value:
+        return ""
+    if not re.fullmatch(r"\+?[0-9 ()-]+", value):
+        raise ValueError("Telefone inválido. Use DDI, DDD e número, apenas com números e formatação comum.")
+    digits = re.sub(r"\D", "", value)
+    if not 8 <= len(digits) <= 15 or digits.startswith("0"):
+        raise ValueError("Telefone inválido. Informe o número internacional com DDI, entre 8 e 15 dígitos.")
+    return digits
+
+
+def duplicate_student(db, full_name, exclude_id=None):
+    """Identifica nomes iguais entre alunos ativos, desconsiderando espaços e caixa."""
+    normalized = " ".join(full_name.split()).casefold()
+    return next((row for row in list_active_students(db)
+                 if row['id'] != exclude_id and ' '.join(row['full_name'].split()).casefold() == normalized), None)
 
 
 def list_active_students(db):

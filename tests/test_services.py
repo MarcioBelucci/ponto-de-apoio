@@ -4,7 +4,7 @@ from datetime import date
 
 from ponto_apoio.database import SCHEMA
 from ponto_apoio.services.campaigns import create_campaign, set_campaign_status
-from ponto_apoio.services.students import add_student, import_students
+from ponto_apoio.services.students import add_student, import_students, clean_phone, duplicate_student
 from ponto_apoio.services.weekly_goals import change_count, ensure_week
 
 
@@ -41,6 +41,19 @@ class ServiceTests(unittest.TestCase):
             self.assertTrue(change_count(self.db, week, 0, 1))
         self.assertFalse(change_count(self.db, week, 0, 1))
         self.assertTrue(change_count(self.db, week, 0, -1))
+
+    def test_phone_validation(self):
+        self.assertEqual(clean_phone(''), '')
+        self.assertEqual(clean_phone('+55 (11) 99999-9999'), '5511999999999')
+        for value in ('abc', '123', '00123456789', '5511999999999 ramal 12'):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                clean_phone(value)
+
+    def test_duplicate_names_ignore_case_and_extra_spaces(self):
+        add_student(self.db, 'Ana Silva')
+        student = duplicate_student(self.db, '  ANA   silva ')
+        self.assertIsNotNone(student)
+        self.assertIsNone(duplicate_student(self.db, 'Ana Silva', student['id']))
 
 
 if __name__ == '__main__':
