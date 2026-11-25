@@ -28,3 +28,13 @@ Os dados ficam no arquivo `data\outreaches.db`. Faça uma cópia periódica dess
 - Enquanto o outreach estiver **Em andamento**, alunos adicionados posteriormente serão incluídos nele automaticamente. Ao fim da semana, clique em **Encerrar outreach** para preservar sua lista de destinatários.
 
 O sistema nunca envia mensagens sozinho.
+
+## Testes
+
+Com o ambiente virtual ativado e as dependências instaladas, execute antes de cada alteração:
+
+```powershell
+python -m unittest discover -s tests -v
+```
+
+Os testes usam um banco SQLite em memória e não alteram os dados locais.
