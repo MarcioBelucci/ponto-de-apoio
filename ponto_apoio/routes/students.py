@@ -26,7 +26,8 @@ def register_student_routes(app):
 
     @app.route("/students")
     def students():
-        return render_template("students.html", students=list_active_students(get_db()))
+        search = request.args.get("q", "").strip()
+        return render_template("students.html", students=list_active_students(get_db(), search), search=search)
 
     @app.post("/students", endpoint="add_student")
     def add_student_route():

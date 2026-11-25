@@ -3,6 +3,7 @@
 import csv
 import io
 import re
+import unicodedata
 
 from openpyxl import load_workbook
 
@@ -35,10 +36,16 @@ def duplicate_student(db, full_name, exclude_id=None):
                  if row['id'] != exclude_id and ' '.join(row['full_name'].split()).casefold() == normalized), None)
 
 
-def list_active_students(db):
-    return db.execute(
+def list_active_students(db, search=""):
+    students = db.execute(
         "SELECT * FROM students WHERE active = 1 ORDER BY full_name COLLATE NOCASE"
     ).fetchall()
+    def normalize(value):
+        return ''.join(c for c in unicodedata.normalize('NFKD', value.casefold())
+                       if not unicodedata.combining(c))
+    terms = normalize(search).split()
+    return [student for student in students
+            if all(term in normalize(student['full_name']) for term in terms)]
 
 
 def add_student(db, full_name, phone="", email="", program="BIU MLP", notes=""):

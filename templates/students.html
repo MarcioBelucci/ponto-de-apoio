@@ -20,7 +20,8 @@
   </details>
 
   <section class="panel" aria-labelledby="active-students-title">
-    <div class="section-title"><div><h2 id="active-students-title">{{ students|length }} aluno(s) ativo(s)</h2></div></div>
+    <form method="get" action="{{ url_for('students') }}" class="student-search"><label for="student-search">Pesquisar aluno por nome</label><input id="student-search" type="search" name="q" value="{{ search }}" placeholder="Digite o nome"><button class="button" type="submit">Pesquisar</button>{% if search %} <a class="button" href="{{ url_for('students') }}">Limpar pesquisa</a>{% endif %}</form>
+    <div class="section-title"><div><h2 id="active-students-title">{{ students|length }} aluno(s) ativo(s){% if search %} encontrado(s){% endif %}</h2></div></div>
     {% if students %}
       <table>
         <thead><tr><th scope="col">Aluno</th><th scope="col">Telefone</th><th scope="col">Programa</th><th scope="col">Ações</th></tr></thead>
@@ -47,7 +48,7 @@
         </tbody>
       </table>
     {% else %}
-      <div class="empty">Importe uma planilha ou adicione o primeiro aluno.</div>
+      <div class="empty">{% if search %}Nenhum aluno encontrado para esta pesquisa.{% else %}Importe uma planilha ou adicione o primeiro aluno.{% endif %}</div>
     {% endif %}
   </section>
 {% endblock %}

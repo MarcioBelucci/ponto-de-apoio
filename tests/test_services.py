@@ -4,7 +4,7 @@ from datetime import date
 
 from ponto_apoio.database import SCHEMA
 from ponto_apoio.services.campaigns import create_campaign, set_campaign_status
-from ponto_apoio.services.students import add_student, import_students, clean_phone, duplicate_student
+from ponto_apoio.services.students import add_student, import_students, clean_phone, duplicate_student, list_active_students, archive_student
 from ponto_apoio.services.weekly_goals import add_contact, remove_contact, week_summary, change_count, ensure_week
 
 
@@ -48,6 +48,16 @@ class ServiceTests(unittest.TestCase):
         for value in ('abc', '123', '00123456789', '5511999999999 ramal 12'):
             with self.subTest(value=value), self.assertRaises(ValueError):
                 clean_phone(value)
+
+    def test_search_finds_active_names_without_accents_or_case(self):
+        add_student(self.db, 'João da Silva')
+        add_student(self.db, 'Joana Souza')
+        add_student(self.db, 'João Arquivado')
+        archived = self.db.execute("SELECT id FROM students WHERE full_name='João Arquivado'").fetchone()[0]
+        archive_student(self.db, archived, '2026-11-25')
+        self.assertEqual([s['full_name'] for s in list_active_students(self.db, ' SILVA joao ')], ['João da Silva'])
+        self.assertEqual(len(list_active_students(self.db, '')), 2)
+        self.assertEqual(list_active_students(self.db, 'inexistente'), [])
 
     def test_duplicate_names_ignore_case_and_extra_spaces(self):
         add_student(self.db, 'Ana Silva')
