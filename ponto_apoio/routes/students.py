@@ -4,7 +4,7 @@ import json
 import secrets
 from datetime import datetime
 
-from flask import flash, redirect, render_template, request, session, url_for
+from flask import abort, flash, redirect, render_template, request, session, url_for
 from openpyxl.utils.exceptions import InvalidFileException
 from zipfile import BadZipFile
 
@@ -19,8 +19,10 @@ from ponto_apoio.services.students import (
     list_students,
     read_sheet,
     restore_student,
+    student_history,
     update_student,
 )
+from ponto_apoio.services.weekly_goals import ACTIVITIES
 
 
 def register_student_routes(app):
@@ -31,6 +33,16 @@ def register_student_routes(app):
         search = request.args.get("q", "").strip()
         archived = request.args.get("view") == "archived"
         return render_template("students.html", students=list_students(get_db(), search, archived), search=search, archived=archived)
+
+    @app.get("/students/<int:student_id>/history")
+    def student_history_page(student_id):
+        db = get_db()
+        student = db.execute("SELECT * FROM students WHERE id=?", (student_id,)).fetchone()
+        if not student:
+            abort(404)
+        campaigns, contacts = student_history(db, student_id)
+        return render_template("student_history.html", student=student, campaigns=campaigns,
+                               contacts=contacts, activities=ACTIVITIES)
 
     @app.post("/students", endpoint="add_student")
     def add_student_route():

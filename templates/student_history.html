@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Histórico de {{ student.full_name }} · Ponto de Apoio{% endblock %}
+{% block content %}
+  <div class="page-heading">
+    <div><p class="eyebrow">Histórico do aluno{% if not student.active %} · Arquivado{% endif %}</p><h1>{{ student.full_name }}</h1><p>Consulte os contatos registrados nas metas e a participação em outreaches.</p></div>
+    <a class="button" href="{{ url_for('students', view='archived' if not student.active else None) }}">Voltar aos alunos</a>
+  </div>
+  <p>Os contatos das metas e os status dos outreaches são registrados separadamente. Um mesmo contato pode aparecer nas duas listas.</p>
+  <section class="panel" aria-labelledby="contacts-title">
+    <h2 id="contacts-title">Contatos registrados nas metas</h2>
+    {% if contacts %}
+      <table><thead><tr><th scope="col">Semana iniciada em</th><th scope="col">Atividade</th><th scope="col">Dia da meta</th><th scope="col">Registrado em (UTC)</th></tr></thead><tbody>
+      {% for contact in contacts %}<tr><td>{{ contact.week_start }}</td><td>{{ activities[contact.day][1] }}</td><td>{{ activities[contact.day][0] }}</td><td>{{ contact.created_at }}</td></tr>{% endfor %}
+      </tbody></table>
+    {% else %}<p>Nenhum contato identificado nas metas para este aluno.</p>{% endif %}
+    <p><small>Registros antigos sem aluno identificado não aparecem neste histórico.</small></p>
+  </section>
+  <section class="panel" aria-labelledby="outreaches-title">
+    <h2 id="outreaches-title">Participação em outreaches</h2>
+    {% if campaigns %}
+      <table><thead><tr><th scope="col">Outreach</th><th scope="col">Situação atual</th><th scope="col">Última marcação como enviado</th><th scope="col"><span class="sr-only">Ações</span></th></tr></thead><tbody>
+      {% for campaign in campaigns %}
+        <tr><td>{{ campaign.title }}{% if campaign.archived_at %} <small>(arquivado)</small>{% endif %}<br><small>Criado em {{ campaign.created_at[:10] }}</small></td>
+        <td>{{ {'pending':'Pendente','opened':'Aberto','sent':'Enviado','skip':'Não enviar'}[campaign.status] }}</td><td>{{ campaign.sent_at or '—' }}</td>
+        <td><a class="button small" href="{{ url_for('archived_campaign_detail' if campaign.archived_at else 'campaign_detail', campaign_id=campaign.id) }}">Abrir</a></td></tr>
+      {% endfor %}</tbody></table>
+    {% else %}<p>Este aluno ainda não foi incluído em nenhum outreach.</p>{% endif %}
+  </section>
+{% endblock %}

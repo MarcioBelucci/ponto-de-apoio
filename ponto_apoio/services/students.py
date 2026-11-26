@@ -54,6 +54,21 @@ def list_active_students(db, search=""):
     return list_students(db, search)
 
 
+def student_history(db, student_id):
+    """Retorna a participação em outreaches e os contatos de metas do aluno."""
+    campaigns = db.execute("""
+        SELECT c.id, c.title, c.created_at, c.archived_at, se.status, se.sent_at
+        FROM sends se JOIN campaigns c ON c.id=se.campaign_id
+        WHERE se.student_id=?
+        ORDER BY c.created_at DESC, c.id DESC
+    """, (student_id,)).fetchall()
+    contacts = db.execute("""
+        SELECT week_start, day, created_at FROM weekly_contacts
+        WHERE student_id=? ORDER BY week_start DESC, day DESC, id DESC
+    """, (student_id,)).fetchall()
+    return campaigns, contacts
+
+
 def add_student(db, full_name, phone="", email="", program="BIU MLP", notes=""):
     """Cria um aluno e o inclui nos outreaches em andamento."""
     normalized_name = " ".join(full_name.strip().split())
