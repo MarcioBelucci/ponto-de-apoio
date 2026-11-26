@@ -32,7 +32,7 @@
               <td><strong>{{ student.full_name }}</strong>{% if student.email %}<br><small>{{ student.email }}</small>{% endif %}</td>
               <td>{{ student.phone or 'Pendente' }}</td><td>{{ student.program }}</td>
               <td>
-                {% if archived %}<small>Arquivado em {{ student.archived_at[:10] if student.archived_at else 'data não informada' }}</small>{% if student.notes %}<br><small>Observações: {{ student.notes }}</small>{% endif %}{% else %}
+                {% if archived %}<small>Arquivado em {{ student.archived_at[:10] if student.archived_at else 'data não informada' }}</small>{% if student.notes %}<br><small>Observações: {{ student.notes }}</small>{% endif %}<form method="post" action="{{ url_for('restore_student_route', student_id=student.id) }}" onsubmit="return confirm('Reativar este aluno? Ele será incluído nos outreaches em andamento em que ainda não estiver.');"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><button class="button small">Reativar aluno</button></form>{% else %}
                 <details class="inline"><summary class="button small">Editar</summary>
                   <form method="post" action="{{ url_for('edit_student', student_id=student.id) }}" class="edit-form"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                     <label>Nome completo<input name="full_name" value="{{ student.full_name }}" required></label>

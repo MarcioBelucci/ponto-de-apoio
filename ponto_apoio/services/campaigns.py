@@ -108,3 +108,11 @@ def archive_campaign(db, campaign_id, archived_at):
     db.execute(
         "UPDATE campaigns SET archived_at=? WHERE id=?", (archived_at, campaign_id)
     )
+
+
+def restore_campaign(db, campaign_id):
+    """Restaura o histórico como encerrado, sem alterar os destinatários."""
+    return db.execute(
+        "UPDATE campaigns SET archived_at=NULL, status='closed' WHERE id=? AND archived_at IS NOT NULL",
+        (campaign_id,),
+    ).rowcount > 0

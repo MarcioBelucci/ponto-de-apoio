@@ -2,6 +2,7 @@
 {% block title %}{{ campaign.title }} · Arquivado{% endblock %}
 {% block content %}
   <div class="page-heading"><div><p class="eyebrow">Outreach arquivado</p><h1>{{ campaign.title }}</h1><p>Consulta do histórico · arquivado em {{ campaign.archived_at[:10] }}</p></div><a class="button" href="{{ url_for('campaigns', view='archived') }}">Voltar aos arquivados</a></div>
+  <form method="post" action="{{ url_for('restore_campaign_route', campaign_id=campaign.id) }}" onsubmit="return confirm('Recuperar este outreach como encerrado? Você poderá reabri-lo depois.');"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><button class="button primary">Recuperar outreach</button></form>
   <section class="panel message"><h2>Mensagem-base</h2><pre>{{ campaign.message_template }}</pre></section>
   <section class="panel"><h2>Destinatários</h2><table><thead><tr><th>Aluno</th><th>Situação</th><th>Enviado em</th></tr></thead><tbody>{% for student in students %}<tr><td>{{ student.full_name }}{% if not student.active %} (arquivado){% endif %}</td><td>{{ {'pending':'Pendente','opened':'Aberto','sent':'Enviado','skip':'Não enviar'}[student.status] }}</td><td>{{ student.sent_at or '—' }}</td></tr>{% endfor %}</tbody></table></section>
 {% endblock %}

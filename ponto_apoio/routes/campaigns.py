@@ -12,6 +12,7 @@ from ponto_apoio.services.campaigns import (
     create_campaign,
     list_campaign_students,
     list_campaigns,
+    restore_campaign,
     set_campaign_status as update_campaign_status,
     set_send_status as update_send_status,
     sync_campaign,
@@ -38,6 +39,17 @@ def register_campaign_routes(app):
             flash('Outreach arquivado não encontrado.', 'error')
             return redirect(url_for('campaigns', view='archived'))
         return render_template('archived_campaign.html', campaign=campaign, students=list_campaign_students(db, campaign_id))
+
+    @app.post('/campaigns/<int:campaign_id>/restore')
+    def restore_campaign_route(campaign_id):
+        db = get_db()
+        restored = restore_campaign(db, campaign_id)
+        db.commit()
+        if not restored:
+            flash('Outreach arquivado não encontrado.', 'error')
+            return redirect(url_for('campaigns', view='archived'))
+        flash('Outreach recuperado como encerrado. O histórico foi preservado; você pode reabri-lo quando quiser.', 'success')
+        return redirect(url_for('campaign_detail', campaign_id=campaign_id))
 
     @app.route("/campaigns/new", methods=["GET", "POST"])
     def new_campaign():

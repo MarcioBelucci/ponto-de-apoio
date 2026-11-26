@@ -18,6 +18,7 @@ from ponto_apoio.services.students import (
     list_active_students,
     list_students,
     read_sheet,
+    restore_student,
     update_student,
 )
 
@@ -92,6 +93,21 @@ def register_student_routes(app):
         db.commit()
         flash("Aluno arquivado. O histórico foi preservado.", "success")
         return redirect(url_for("students"))
+
+    @app.post("/students/<int:student_id>/restore")
+    def restore_student_route(student_id):
+        db = get_db()
+        student = db.execute("SELECT full_name FROM students WHERE id=? AND active=0", (student_id,)).fetchone()
+        if not student:
+            flash("Aluno arquivado não encontrado.", "error")
+            return redirect(url_for("students", view="archived"))
+        duplicate = duplicate_student(db, student["full_name"])
+        linked = restore_student(db, student_id)
+        db.commit()
+        if duplicate:
+            flash("Aviso: existe outro aluno ativo com esse nome; confira os cadastros.", "error")
+        flash(f"Aluno reativado. Incluído em {linked} outreach(es) em andamento em que ainda não estava.", "success")
+        return redirect(url_for("students", view="archived"))
 
     @app.route("/import", methods=["GET", "POST"], endpoint="import_students")
     def import_students_route():

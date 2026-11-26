@@ -104,6 +104,17 @@ def archive_student(db, student_id, archived_at):
     )
 
 
+def restore_student(db, student_id):
+    """Reativa o aluno e o inclui nos outreaches abertos, sem duplicar registros."""
+    cursor = db.execute(
+        "UPDATE students SET active=1, archived_at=NULL WHERE id=? AND active=0",
+        (student_id,),
+    )
+    if not cursor.rowcount:
+        return None
+    return add_student_to_open_campaigns(db, student_id)
+
+
 def read_sheet(upload):
     """Lê uma planilha CSV ou XLSX enviada pelo usuário."""
     filename = upload.filename.lower()
