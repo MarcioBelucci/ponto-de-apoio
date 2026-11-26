@@ -61,24 +61,43 @@ def register_campaign_routes(app):
         if not campaign:
             flash("Outreach não encontrado.", "error")
             return redirect(url_for("campaigns"))
+        from ponto_apoio.services.students import normalize_search
+        search = request.args.get("q", "").strip()
+        status = request.args.get("status", "all")
+        if status not in {"all", "pending", "opened", "sent", "skip"}:
+            status = "all"
+        all_students = list_campaign_students(db, campaign_id)
+        terms = normalize_search(search).split()
+        filtered = [s for s in all_students if (status == "all" or s["status"] == status)
+                    and all(term in normalize_search(s["full_name"]) for term in terms)]
+        pages = max(1, (len(filtered) + 19) // 20)
+        page = max(1, min(request.args.get("page", 1, type=int) or 1, pages))
         return render_template(
             "campaign_detail.html",
             campaign=campaign,
-            students=list_campaign_students(db, campaign_id),
+            students=filtered[(page - 1) * 20:page * 20],
+            search=search, status=status, page=page, pages=pages,
+            total=len(all_students), filtered_total=len(filtered),
+            sent_total=sum(s["status"] == "sent" for s in all_students),
             quote=quote,
         )
 
     @app.post("/campaigns/<int:campaign_id>/students/<int:student_id>/status")
     def set_send_status(campaign_id, student_id):
+        search = request.args.get("q", "")
+        selected_status = request.args.get("filter_status", "all")
+        page = request.args.get("page", 1, type=int) or 1
+        destination = url_for("campaign_detail", campaign_id=campaign_id, q=search,
+                              status=selected_status, page=page)
         status = request.form.get("status")
         if status not in {"pending", "opened", "sent", "skip"}:
             flash("Situação inválida.", "error")
-            return redirect(url_for("campaign_detail", campaign_id=campaign_id))
+            return redirect(destination)
         db = get_db()
         update_send_status(db, campaign_id, student_id, status, datetime.now().isoformat(timespec="seconds"))
         db.commit()
         flash("Situação atualizada.", "success")
-        return redirect(url_for("campaign_detail", campaign_id=campaign_id))
+        return redirect(destination)
 
     @app.post("/campaigns/<int:campaign_id>/sync", endpoint="sync_campaign")
     def sync_campaign_route(campaign_id):

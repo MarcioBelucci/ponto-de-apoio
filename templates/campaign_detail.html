@@ -18,6 +18,14 @@
 
   <section class="panel message" aria-labelledby="message-title"><h2 id="message-title">Mensagem-base</h2><pre>{{ campaign.message_template }}</pre></section>
   <section class="panel" aria-label="Destinatários do outreach">
+    <h2>Destinatários</h2>
+    <p>{{ sent_total }} de {{ total }} enviados · {{ filtered_total }} resultado(s)</p>
+    <form method="get" action="{{ url_for('campaign_detail', campaign_id=campaign.id) }}">
+      <label>Pesquisar aluno<input type="search" name="q" value="{{ search }}" placeholder="Nome do aluno"></label>
+      <label>Situação<select name="status">{% for value, label in [('all', 'Todas'), ('pending', 'Pendente'), ('opened', 'Aberto'), ('sent', 'Enviado'), ('skip', 'Não enviar')] %}<option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+      <button class="button">Filtrar</button> <a class="button" href="{{ url_for('campaign_detail', campaign_id=campaign.id) }}">Limpar filtros</a>
+    </form>
+    {% if students %}
     <table>
       <thead><tr><th scope="col">Aluno</th><th scope="col">Prévia</th><th scope="col">Situação</th><th scope="col">Ações</th></tr></thead>
       <tbody>
@@ -29,12 +37,18 @@
             <td><span class="badge {{ student.status }}">{{ {'pending':'Pendente','opened':'Aberto','sent':'Enviado','skip':'Não enviar'}[student.status] }}</span></td>
             <td>
               {% if student.phone %}<a class="button primary small" href="whatsapp://send?phone={{ student.phone }}&text={{ quote(text) }}">Abrir no WhatsApp</a>{% endif %}
-              <form class="inline" method="post" action="{{ url_for('set_send_status', campaign_id=campaign.id, student_id=student.id) }}"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="status" value="sent"><button class="button small">Marcar enviado</button></form>
-              <details class="inline"><summary class="button small">Mais</summary><div class="status-form"><a class="button small" target="whatsapp_outreach" href="https://web.whatsapp.com/send?phone={{ student.phone }}&text={{ quote(text) }}">Abrir no Web</a><form method="post" action="{{ url_for('set_send_status', campaign_id=campaign.id, student_id=student.id) }}"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><button name="status" value="pending">Pendente</button><button name="status" value="opened">Aberto</button><button name="status" value="skip">Não enviar</button></form></div></details>
+              <form class="inline" method="post" action="{{ url_for('set_send_status', campaign_id=campaign.id, student_id=student.id, q=search, filter_status=status, page=page) }}"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="status" value="sent"><button class="button small">Marcar enviado</button></form>
+              <details class="inline"><summary class="button small">Mais</summary><div class="status-form"><a class="button small" target="whatsapp_outreach" href="https://web.whatsapp.com/send?phone={{ student.phone }}&text={{ quote(text) }}">Abrir no Web</a><form method="post" action="{{ url_for('set_send_status', campaign_id=campaign.id, student_id=student.id, q=search, filter_status=status, page=page) }}"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><button name="status" value="pending">Pendente</button><button name="status" value="opened">Aberto</button><button name="status" value="skip">Não enviar</button></form></div></details>
             </td>
           </tr>
         {% endfor %}
       </tbody>
     </table>
+    <nav aria-label="Páginas de destinatários">
+      {% if page > 1 %}<a class="button small" href="{{ url_for('campaign_detail', campaign_id=campaign.id, q=search, status=status, page=page-1) }}">Anterior</a>{% endif %}
+      <span>Página {{ page }} de {{ pages }}</span>
+      {% if page < pages %}<a class="button small" href="{{ url_for('campaign_detail', campaign_id=campaign.id, q=search, status=status, page=page+1) }}">Próxima</a>{% endif %}
+    </nav>
+    {% else %}<p>Nenhum destinatário encontrado para os filtros selecionados.</p>{% endif %}
   </section>
 {% endblock %}
