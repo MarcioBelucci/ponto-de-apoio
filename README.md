@@ -2,7 +2,7 @@
 
 Aplicação local para organizar alunos, criar outreaches e abrir mensagens personalizadas no WhatsApp Desktop.
 
-## Como iniciar
+## Primeira instalação
 
 1. Instale o Python 3.11 ou mais recente, caso necessário.
 2. Abra o PowerShell nesta pasta.
@@ -12,12 +12,17 @@ Aplicação local para organizar alunos, criar outreaches e abrir mensagens pers
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-python app.py
 ```
 
-4. Abra `http://127.0.0.1:5000` no navegador.
+4. Feche o PowerShell.
 
-Os dados ficam no arquivo `data\outreaches.db`. Para parar o sistema, pressione `Ctrl+C` no PowerShell.
+## Como iniciar
+
+Dê duplo clique em **Iniciar Ponto de Apoio.bat**. O navegador abrirá automaticamente; se não abrir, acesse `http://127.0.0.1:5000` manualmente. Mantenha a janela do sistema aberta enquanto o utiliza. Para encerrar, pressione `Ctrl+C` nessa janela ou feche-a.
+
+Se aparecer uma mensagem sobre ambiente ou dependências ausentes, siga a primeira instalação acima. Se a porta 5000 estiver ocupada, verifique se o sistema já está aberto ou se outro programa está usando essa porta. Você pode criar um atalho para o arquivo na área de trabalho.
+
+Os dados ficam no arquivo `data\outreaches.db`.
 
 ## Backup e restauração
 
