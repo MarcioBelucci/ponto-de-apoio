@@ -9,6 +9,7 @@ from openpyxl.utils.exceptions import InvalidFileException
 from zipfile import BadZipFile
 
 from ponto_apoio.database import get_db
+from ponto_apoio.pagination import paginate
 from ponto_apoio.services.students import (
     add_student,
     archive_student,
@@ -32,7 +33,9 @@ def register_student_routes(app):
     def students():
         search = request.args.get("q", "").strip()
         archived = request.args.get("view") == "archived"
-        return render_template("students.html", students=list_students(get_db(), search, archived), search=search, archived=archived)
+        students, total, page, pages = paginate(list_students(get_db(), search, archived), request.args.get('page', 1, type=int))
+        return render_template("students.html", students=students, search=search, archived=archived,
+                               total=total, page=page, pages=pages)
 
     @app.get("/students/<int:student_id>/history")
     def student_history_page(student_id):

@@ -6,6 +6,7 @@ from urllib.parse import quote
 from flask import flash, redirect, render_template, request, url_for
 
 from ponto_apoio.database import get_db
+from ponto_apoio.pagination import paginate
 from ponto_apoio.services.campaigns import (
     archive_campaign,
     campaign_by_id,
@@ -29,7 +30,11 @@ def register_campaign_routes(app):
         if status not in {'all', 'open', 'closed'}:
             status = 'all'
         archived = request.args.get('view') == 'archived'
-        return render_template("campaigns.html", campaigns=list_campaigns(get_db(), status=status, archived=archived, search=search), search=search, status=status, archived=archived)
+        campaigns, total, page, pages = paginate(
+            list_campaigns(get_db(), status=status, archived=archived, search=search),
+            request.args.get('page', 1, type=int))
+        return render_template("campaigns.html", campaigns=campaigns, search=search, status=status,
+                               archived=archived, total=total, page=page, pages=pages)
 
     @app.get('/campaigns/<int:campaign_id>/archive-view')
     def archived_campaign_detail(campaign_id):

@@ -22,7 +22,7 @@
   <section class="panel" aria-labelledby="active-students-title">
     <p><a href="{{ url_for('students') }}">Alunos ativos</a> · <a href="{{ url_for('students', view='archived') }}">Alunos arquivados</a></p>
     <form method="get" action="{{ url_for('students') }}" class="student-search">{% if archived %}<input type="hidden" name="view" value="archived">{% endif %}<label for="student-search">Pesquisar aluno por nome</label><input id="student-search" type="search" name="q" value="{{ search }}" placeholder="Digite o nome"><button class="button" type="submit">Pesquisar</button>{% if search %} <a class="button" href="{{ url_for('students', view='archived' if archived else None) }}">Limpar pesquisa</a>{% endif %}</form>
-    <div class="section-title"><div><h2 id="active-students-title">{{ students|length }} aluno(s) {{ 'arquivado(s)' if archived else 'ativo(s)' }}{% if search %} encontrado(s){% endif %}</h2></div></div>
+    <div class="section-title"><div><h2 id="active-students-title">{{ total }} aluno(s) {{ 'arquivado(s)' if archived else 'ativo(s)' }}{% if search %} encontrado(s){% endif %}</h2>{% if total %}<p>Exibindo {{ students|length }} de {{ total }} · Página {{ page }} de {{ pages }}</p>{% endif %}</div></div>
     {% if students %}
       <table>
         <thead><tr><th scope="col">Aluno</th><th scope="col">Telefone</th><th scope="col">Programa</th><th scope="col">Ações</th></tr></thead>
@@ -51,6 +51,7 @@
           {% endfor %}
         </tbody>
       </table>
+      {% if pages > 1 %}<nav aria-label="Páginas de alunos">{% if page > 1 %}<a class="button small" href="{{ url_for('students', q=search, view='archived' if archived else None, page=page-1) }}">Anterior</a>{% endif %}<span>Página {{ page }} de {{ pages }}</span>{% if page < pages %}<a class="button small" href="{{ url_for('students', q=search, view='archived' if archived else None, page=page+1) }}">Próxima</a>{% endif %}</nav>{% endif %}
     {% else %}
       <div class="empty">{% if search %}Nenhum aluno encontrado para esta pesquisa.{% elif archived %}Nenhum aluno arquivado.{% else %}Importe uma planilha ou adicione o primeiro aluno.{% endif %}</div>
     {% endif %}

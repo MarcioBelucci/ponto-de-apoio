@@ -10,6 +10,7 @@
   <section class="panel">
     <p><a href="{{ url_for('campaigns') }}">Outreaches ativos</a> · <a href="{{ url_for('campaigns', view='archived') }}">Outreaches arquivados</a></p>
     <form method="get" action="{{ url_for('campaigns') }}">{% if archived %}<input type="hidden" name="view" value="archived">{% endif %}<label>Título<input type="search" name="q" value="{{ search }}" placeholder="Pesquisar título"></label><label>Situação<select name="status"><option value="all" {% if status == 'all' %}selected{% endif %}>Todas</option><option value="open" {% if status == 'open' %}selected{% endif %}>Em andamento</option><option value="closed" {% if status == 'closed' %}selected{% endif %}>Encerrado</option></select></label><button class="button">Filtrar</button> <a class="button" href="{{ url_for('campaigns', view='archived' if archived else None) }}">Limpar filtros</a></form>
+    <p>{{ total }} outreach(es) encontrado(s){% if total %} · Exibindo {{ campaigns|length }} de {{ total }} · Página {{ page }} de {{ pages }}{% endif %}</p>
     {% if campaigns %}
       <table>
         <thead><tr><th scope="col">Outreach</th><th scope="col">Situação</th><th scope="col">Progresso</th><th scope="col">Criado em</th><th scope="col"><span class="sr-only">Ações</span></th></tr></thead>
@@ -19,6 +20,7 @@
           {% endfor %}
         </tbody>
       </table>
+      {% if pages > 1 %}<nav aria-label="Páginas de outreaches">{% if page > 1 %}<a class="button small" href="{{ url_for('campaigns', q=search, status=status, view='archived' if archived else None, page=page-1) }}">Anterior</a>{% endif %}<span>Página {{ page }} de {{ pages }}</span>{% if page < pages %}<a class="button small" href="{{ url_for('campaigns', q=search, status=status, view='archived' if archived else None, page=page+1) }}">Próxima</a>{% endif %}</nav>{% endif %}
     {% else %}
       <div class="empty">Nenhum outreach encontrado.</div>
     {% endif %}
