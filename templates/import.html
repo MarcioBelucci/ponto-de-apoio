@@ -3,16 +3,35 @@
 {% block title %}Importar planilha · Ponto de Apoio{% endblock %}
 
 {% block content %}
-  <div class="page-heading"><div><p class="eyebrow">Base de contatos</p><h1>Importar nomes</h1><p>Use uma planilha Excel (.xlsx) ou CSV. Os telefones podem ser adicionados depois.</p></div></div>
+  <div class="page-heading"><div><p class="eyebrow">Base de contatos</p><h1>Importar alunos</h1><p>Use uma planilha Excel (.xlsx) ou CSV com nomes e, se disponíveis, telefones e e-mails.</p></div></div>
   {% if preview is none %}
     <section class="panel narrow"><form method="post" enctype="multipart/form-data"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}"><label>Planilha de alunos<input type="file" name="file" accept=".xlsx,.csv" required></label><p class="hint">A primeira linha deve conter os títulos das colunas.</p><button class="button primary">Ver planilha</button></form></section>
   {% else %}
-    <section class="panel"><h2>Confira a importação</h2><p>Qual coluna contém os nomes dos alunos?</p>
+    <section class="panel"><h2>Confira a importação</h2><p>Escolha as colunas da planilha. Somente o nome é obrigatório; telefone e e-mail são opcionais.</p>
       <form method="post" action="{{ url_for('confirm_import') }}"><input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-        <label>Coluna de nomes<select name="name_column" required>{% for header in headers %}<option value="{{ loop.index0 }}">{{ header }}</option>{% endfor %}</select></label>
-        <div class="preview"><table><thead><tr>{% for header in headers %}<th scope="col">{{ header }}</th>{% endfor %}</tr></thead><tbody>{% for row in preview[:10] %}<tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>{% endfor %}</tbody></table></div>
+        {% set selected = selections|default({}) %}
+        <label>Coluna de nomes<select name="name_column" required><option value="">Selecione a coluna</option>{% for header in headers %}<option value="{{ loop.index0 }}" {% if selected.get('name') == loop.index0|string %}selected{% endif %}>{{ header }}</option>{% endfor %}</select></label>
+        <label>Coluna de telefones (opcional)<select name="phone_column"><option value="">Não importar</option>{% for header in headers %}<option value="{{ loop.index0 }}" {% if selected.get('phone') == loop.index0|string %}selected{% endif %}>{{ header }}</option>{% endfor %}</select></label>
+        <label>Coluna de e-mails (opcional)<select name="email_column"><option value="">Não importar</option>{% for header in headers %}<option value="{{ loop.index0 }}" {% if selected.get('email') == loop.index0|string %}selected{% endif %}>{{ header }}</option>{% endfor %}</select></label>
+        <p class="hint">Para usar o WhatsApp, inclua o código do país nos telefones. Após escolher a coluna de telefones, a prévia remove o sufixo decimal .0 quando presente. O código do país não é adicionado nem verificado automaticamente. Linhas com caracteres inválidos no telefone ou com e-mail inválido serão ignoradas e informadas. Alunos ativos com o mesmo nome não serão alterados.</p>
+        <div class="preview"><table><thead><tr>{% for header in headers %}<th scope="col">{{ header }}</th>{% endfor %}</tr></thead><tbody>{% for row in preview[:10] %}<tr>{% for cell in row %}<td data-original="{{ cell }}">{{ cell }}</td>{% endfor %}</tr>{% endfor %}</tbody></table></div>
         <button class="button primary">Importar alunos</button> <a class="button" href="{{ url_for('import_students') }}">Cancelar</a>
       </form>
     </section>
+    <script>
+      const phoneColumn = document.querySelector('select[name="phone_column"]');
+      function updatePhonePreview() {
+        const selectedColumn = phoneColumn.value;
+        document.querySelectorAll('.preview tbody tr').forEach(row => {
+          Array.from(row.cells).forEach((cell, index) => {
+            const original = cell.dataset.original;
+            cell.textContent = selectedColumn !== '' && index === Number(selectedColumn)
+              ? original.replace(/^([0-9]+)\.0+$/, '$1') : original;
+          });
+        });
+      }
+      phoneColumn.addEventListener('change', updatePhonePreview);
+      updatePhonePreview();
+    </script>
   {% endif %}
 {% endblock %}

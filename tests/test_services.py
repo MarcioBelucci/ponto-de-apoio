@@ -45,7 +45,10 @@ class ServiceTests(unittest.TestCase):
     def test_phone_validation(self):
         self.assertEqual(clean_phone(''), '')
         self.assertEqual(clean_phone('+55 (11) 99999-9999'), '5511999999999')
-        for value in ('abc', '123', '00123456789', '5511999999999 ramal 12'):
+        self.assertEqual(clean_phone('123'), '123')
+        self.assertEqual(clean_phone('00123456789'), '00123456789')
+        self.assertEqual(clean_phone('+44 20 1234 5678'), '442012345678')
+        for value in ('abc', '---', '5511999999999 ramal 12'):
             with self.subTest(value=value), self.assertRaises(ValueError):
                 clean_phone(value)
 

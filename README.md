@@ -32,8 +32,8 @@ Para restaurar, pare o sistema com `Ctrl+C`. Na pasta `data`, renomeie `outreach
 
 ## Como usar
 
-- Importe uma planilha `.xlsx` ou `.csv` com os nomes dos alunos. Na importação, informe qual coluna contém os nomes.
-- Preencha o telefone de cada aluno uma única vez na tela **Alunos**.
+- Importe uma planilha `.xlsx` ou `.csv` com os nomes dos alunos e, opcionalmente, telefones e e-mails. Selecione as colunas na prévia. Para o WhatsApp, inclua o código do país; ele não é acrescentado nem verificado automaticamente. O sufixo decimal `.0` de números inteiros é removido. Linhas com caracteres inválidos no telefone ou e-mail inválido são informadas e ignoradas. Nomes já ativos são ignorados sem alterar seus cadastros.
+- Preencha ou corrija o telefone e o e-mail de cada aluno na tela **Alunos** quando necessário.
 - Crie um outreach e use `{nome}` onde a mensagem deve incluir o primeiro nome do aluno.
 - Em um outreach, use **Abrir no WhatsApp** para abrir a conversa no aplicativo WhatsApp Desktop instalado no Windows. A alternativa Web permanece disponível no menu **Mais**. Confirme o envio no próprio WhatsApp e então marque o aluno como enviado no sistema.
 - Enquanto o outreach estiver **Em andamento**, alunos adicionados posteriormente serão incluídos nele automaticamente. Ao fim da semana, clique em **Encerrar outreach** para preservar sua lista de destinatários.

@@ -17,15 +17,15 @@ def first_name(name):
 
 
 def clean_phone(value):
-    """Valida um telefone opcional em formato internacional para o WhatsApp."""
+    """Mantém os dígitos de um telefone opcional, sem impor regras por país."""
     value = (value or "").strip()
     if not value:
         return ""
     if not re.fullmatch(r"\+?[0-9 ()-]+", value):
-        raise ValueError("Telefone inválido. Use DDI, DDD e número, apenas com números e formatação comum.")
+        raise ValueError("Telefone inválido. Use números e os símbolos +, espaços, parênteses ou hífens.")
     digits = re.sub(r"\D", "", value)
-    if not 8 <= len(digits) <= 15 or digits.startswith("0"):
-        raise ValueError("Telefone inválido. Informe o número internacional com DDI, entre 8 e 15 dígitos.")
+    if not digits:
+        raise ValueError("Telefone inválido. Informe ao menos um número.")
     return digits
 
 
@@ -143,20 +143,37 @@ def read_sheet(upload):
     raise ValueError("Use um arquivo .xlsx ou .csv.")
 
 
-def import_students(db, rows, name_index):
-    """Importa nomes únicos e retorna as quantidades adicionadas e ignoradas."""
+def import_students(db, rows, name_index, phone_index=None, email_index=None, errors=None):
+    """Importa alunos novos; contatos inválidos fazem a linha ser ignorada."""
     existing = {
         row[0].casefold()
         for row in db.execute("SELECT full_name FROM students WHERE active=1")
     }
     added = skipped = 0
-    for row in rows:
-        name = str(row[name_index] if name_index < len(row) else "").strip()
+    for line_number, row in enumerate(rows, start=2):
+        name = str(row[name_index] or "").strip() if name_index < len(row) else ""
         normalized_name = " ".join(name.split())
         if not normalized_name or normalized_name.casefold() in existing:
             skipped += 1
             continue
-        add_student(db, normalized_name)
+        phone = str(row[phone_index] or "").strip() if phone_index is not None and phone_index < len(row) else ""
+        # Algumas planilhas exportam números inteiros como texto terminado em .0.
+        if re.fullmatch(r"[0-9]+\.0+", phone):
+            phone = phone.split(".", 1)[0]
+        email = str(row[email_index] or "").strip() if email_index is not None and email_index < len(row) else ""
+        try:
+            phone = clean_phone(phone)
+        except ValueError:
+            if errors is not None:
+                errors.append(f"Linha {line_number}: telefone inválido; use números e formatação comum.")
+            skipped += 1
+            continue
+        if email and not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", email):
+            if errors is not None:
+                errors.append(f"Linha {line_number}: e-mail inválido.")
+            skipped += 1
+            continue
+        add_student(db, normalized_name, phone=phone, email=email)
         existing.add(normalized_name.casefold())
         added += 1
     return added, skipped

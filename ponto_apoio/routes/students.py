@@ -173,17 +173,22 @@ def register_student_routes(app):
             flash("A importação expirou ou já foi concluída. Envie a planilha novamente.", "error")
             return redirect(url_for("import_students"))
         rows = json.loads(pending["rows_json"])
+        selections = {field: request.form.get(f"{field}_column", "") for field in ("name", "phone", "email")}
         try:
-            name_index = int(request.form.get("name_column", "-1"))
-        except ValueError:
-            name_index = -1
-        if not 0 <= name_index < len(rows[0]):
-            flash("Escolha a coluna que contém os nomes.", "error")
+            indexes = {field: (int(value) if value != "" else None) for field, value in selections.items()}
+            chosen = [index for index in indexes.values() if index is not None]
+            if indexes["name"] is None or any(index < 0 or index >= len(rows[0]) for index in chosen) or len(chosen) != len(set(chosen)):
+                raise ValueError
+        except (ValueError, TypeError):
+            flash("Escolha a coluna de nomes e use colunas diferentes e válidas para telefone e e-mail.", "error")
             headers = [str(value or f"Coluna {index + 1}") for index, value in enumerate(rows[0])]
-            return render_template("import.html", preview=rows[1:51], headers=headers), 400
-        added, skipped = import_students(db, rows[1:], name_index)
+            return render_template("import.html", preview=rows[1:51], headers=headers, selections=selections), 400
+        errors = []
+        added, skipped = import_students(db, rows[1:], indexes["name"], indexes["phone"], indexes["email"], errors)
         db.execute("DELETE FROM pending_imports WHERE token=?", (token,))
         db.commit()
         session.pop("pending_import", None)
         flash(f"Importação concluída: {added} aluno(s) adicionado(s); {skipped} linha(s) ignorada(s).", "success")
+        if errors:
+            flash("Revise os dados e importe novamente as linhas ignoradas: " + " ".join(errors[:20]) + (f" E mais {len(errors) - 20} linha(s) com dados inválidos." if len(errors) > 20 else ""), "error")
         return redirect(url_for("students"))
