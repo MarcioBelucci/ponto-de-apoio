@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Conciliar cadastros · Ponto de Apoio{% endblock %}
+{% block content %}
+  <div class="page-heading"><div><h1>Conciliar possíveis duplicatas</h1><p>Confirme que os dois cadastros pertencem à mesma pessoa antes de continuar.</p></div><a class="button" href="{{ url_for('students', view='archived') }}">Voltar</a></div>
+  <section class="panel">
+    <h2>Cadastro arquivado #{{ source.id }}</h2>
+    <p>{{ source.full_name }} · Telefone: {{ source.phone or 'não informado' }} · E-mail: {{ source.email or 'não informado' }} · Programa: {{ source.program }}</p>
+    <p>Observações: {{ source.notes or 'nenhuma' }} · <a href="{{ url_for('student_history_page', student_id=source.id) }}">Consultar histórico</a></p>
+    {% if candidates %}
+      <p>Escolha o cadastro ativo que será mantido. Os dados pessoais dele não serão substituídos; o cadastro arquivado e os dados originais permanecerão registrados para auditoria.</p>
+      <p>Os contatos e outreaches serão reunidos. Quando ambos tiverem participação no mesmo outreach, “Enviado” terá prioridade; nos demais conflitos, será mantida a situação do cadastro ativo. Contatos duplicados da mesma atividade e semana contarão uma vez.</p>
+      <p>Recomendamos baixar um backup antes de conciliar. Não há botão de desfazer esta operação.</p>
+      <form method="post" onsubmit="return confirm('Confirmar que os cadastros são da mesma pessoa e conciliar os históricos?');">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+        <label>Cadastro ativo a manter<select name="target_id" required><option value="">Selecione</option>{% for candidate in candidates %}<option value="{{ candidate.id }}">#{{ candidate.id }} · {{ candidate.full_name }} · {{ candidate.phone or 'sem telefone' }} · {{ candidate.email or 'sem e-mail' }}</option>{% endfor %}</select></label>
+        <p>{% for candidate in candidates %}<a href="{{ url_for('student_history_page', student_id=candidate.id) }}">Ver histórico do cadastro #{{ candidate.id }}</a>{% if not loop.last %} · {% endif %}{% endfor %}</p>
+        <label><input type="checkbox" name="confirm" value="yes" required style="display:inline; width:auto"> Confirmei que são a mesma pessoa e revisei os dados.</label>
+        <button class="button primary">Conciliar cadastros</button>
+      </form>
+    {% else %}<p>Não há cadastro ativo com o mesmo nome. Se for a mesma pessoa, você pode reativar o cadastro arquivado na lista de alunos.</p>{% endif %}
+  </section>
+{% endblock %}

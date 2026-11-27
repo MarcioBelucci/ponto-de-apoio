@@ -18,6 +18,8 @@ from ponto_apoio.services.students import (
     import_students,
     list_active_students,
     list_students,
+    merge_candidates,
+    merge_students,
     read_sheet,
     restore_student,
     student_history,
@@ -115,7 +117,7 @@ def register_student_routes(app):
     @app.post("/students/<int:student_id>/restore")
     def restore_student_route(student_id):
         db = get_db()
-        student = db.execute("SELECT full_name FROM students WHERE id=? AND active=0", (student_id,)).fetchone()
+        student = db.execute("SELECT full_name FROM students WHERE id=? AND active=0 AND merged_into IS NULL", (student_id,)).fetchone()
         if not student:
             flash("Aluno arquivado não encontrado.", "error")
             return redirect(url_for("students", view="archived"))
@@ -126,6 +128,24 @@ def register_student_routes(app):
             flash("Aviso: existe outro aluno ativo com esse nome; confira os cadastros.", "error")
         flash(f"Aluno reativado. Incluído em {linked} outreach(es) em andamento em que ainda não estava.", "success")
         return redirect(url_for("students", view="archived"))
+
+    @app.route("/students/<int:student_id>/merge", methods=["GET", "POST"])
+    def merge_student_route(student_id):
+        db = get_db()
+        source, candidates = merge_candidates(db, student_id)
+        if not source:
+            flash("Aluno arquivado não encontrado ou já conciliado.", "error")
+            return redirect(url_for("students", view="archived"))
+        if request.method == "POST":
+            target_id = request.form.get("target_id", type=int)
+            if request.form.get("confirm") != "yes" or not merge_students(db, student_id, target_id):
+                db.rollback()
+                flash("Selecione um cadastro ativo de mesmo nome e confirme a conciliação.", "error")
+            else:
+                db.commit()
+                flash("Cadastros conciliados. Os registros originais foram preservados no banco para auditoria.", "success")
+                return redirect(url_for("student_history_page", student_id=target_id))
+        return render_template("merge_students.html", source=source, candidates=candidates)
 
     @app.route("/import", methods=["GET", "POST"], endpoint="import_students")
     def import_students_route():
@@ -190,5 +210,5 @@ def register_student_routes(app):
         session.pop("pending_import", None)
         flash(f"Importação concluída: {added} aluno(s) adicionado(s); {skipped} linha(s) ignorada(s).", "success")
         if errors:
-            flash("Revise os dados e importe novamente as linhas ignoradas: " + " ".join(errors[:20]) + (f" E mais {len(errors) - 20} linha(s) com dados inválidos." if len(errors) > 20 else ""), "error")
+            flash("Revise as linhas ignoradas: " + " ".join(errors[:20]) + (f" E mais {len(errors) - 20} linha(s) para revisar." if len(errors) > 20 else ""), "error")
         return redirect(url_for("students"))

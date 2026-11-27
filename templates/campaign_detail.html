@@ -32,7 +32,7 @@
         {% for student in students %}
           {% set text = campaign.message_template.replace('{nome}', student.first_name) %}
           <tr>
-            <td><strong>{{ student.full_name }}</strong><br><small>{{ student.phone or 'Telefone pendente' }}</small></td>
+            <td><strong>{{ student.full_name }}</strong>{% if not student.active %} <span class="badge">Aluno arquivado</span>{% endif %}<br><small>{{ student.phone or 'Telefone pendente' }}</small>{% if not student.active %}<br><a href="{{ url_for('student_history_page', student_id=student.id) }}">Consultar histórico</a> · <a href="{{ url_for('merge_student_route', student_id=student.id) }}">Ver possíveis duplicatas</a>{% endif %}</td>
             <td class="preview-text"><details class="message-preview"><summary><span class="preview-snippet">{{ text }}</span><span class="preview-expand">Ver mensagem completa</span><span class="preview-collapse">Recolher mensagem</span></summary><div class="preview-full">{{ text }}</div></details></td>
             <td><span class="badge {{ student.status }}">{{ {'pending':'Pendente','opened':'Aberto','sent':'Enviado','skip':'Não enviar'}[student.status] }}</span></td>
             <td>

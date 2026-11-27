@@ -2,6 +2,7 @@
 
 import csv
 import io
+import json
 import re
 import unicodedata
 
@@ -123,12 +124,59 @@ def archive_student(db, student_id, archived_at):
 def restore_student(db, student_id):
     """Reativa o aluno e o inclui nos outreaches abertos, sem duplicar registros."""
     cursor = db.execute(
-        "UPDATE students SET active=1, archived_at=NULL WHERE id=? AND active=0",
+        "UPDATE students SET active=1, archived_at=NULL WHERE id=? AND active=0 AND merged_into IS NULL",
         (student_id,),
     )
     if not cursor.rowcount:
         return None
     return add_student_to_open_campaigns(db, student_id)
+
+
+def merge_candidates(db, source_id):
+    source = db.execute("SELECT * FROM students WHERE id=? AND active=0 AND merged_into IS NULL", (source_id,)).fetchone()
+    if not source:
+        return None, []
+    key = " ".join(source["full_name"].split()).casefold()
+    candidates = [row for row in list_active_students(db) if " ".join(row["full_name"].split()).casefold() == key]
+    return source, candidates
+
+
+def merge_students(db, source_id, target_id):
+    """Une um arquivado a um ativo, guardando cópia dos registros originais."""
+    source, candidates = merge_candidates(db, source_id)
+    target = next((row for row in candidates if row["id"] == target_id), None)
+    if not target:
+        return False
+    source_sends = db.execute("SELECT * FROM sends WHERE student_id=?", (source_id,)).fetchall()
+    target_sends = db.execute("SELECT * FROM sends WHERE student_id=?", (target_id,)).fetchall()
+    source_contacts = db.execute("SELECT * FROM weekly_contacts WHERE student_id=?", (source_id,)).fetchall()
+    target_contacts = db.execute("SELECT * FROM weekly_contacts WHERE student_id=?", (target_id,)).fetchall()
+    snapshot = dict(source=dict(source), target=dict(target),
+                    source_sends=[dict(row) for row in source_sends],
+                    target_sends=[dict(row) for row in target_sends],
+                    source_contacts=[dict(row) for row in source_contacts],
+                    target_contacts=[dict(row) for row in target_contacts])
+    db.execute("INSERT INTO student_merges (source_id, target_id, snapshot) VALUES (?, ?, ?)",
+               (source_id, target_id, json.dumps(snapshot, ensure_ascii=False)))
+    for send in source_sends:
+        other = db.execute("SELECT * FROM sends WHERE campaign_id=? AND student_id=?", (send["campaign_id"], target_id)).fetchone()
+        if not other:
+            db.execute("UPDATE sends SET student_id=? WHERE id=?", (target_id, send["id"]))
+        else:
+            status = "sent" if "sent" in (send["status"], other["status"]) else other["status"]
+            sent_at = (other["sent_at"] if other["status"] == "sent" else send["sent_at"]) if status == "sent" else (other["sent_at"] or send["sent_at"])
+            db.execute("UPDATE sends SET status=?, sent_at=?, opened_at=? WHERE id=?",
+                       (status, sent_at, other["opened_at"] or send["opened_at"], other["id"]))
+            db.execute("DELETE FROM sends WHERE id=?", (send["id"],))
+    for contact in source_contacts:
+        other = db.execute("SELECT id FROM weekly_contacts WHERE week_start=? AND day=? AND student_id=?",
+                           (contact["week_start"], contact["day"], target_id)).fetchone()
+        if other:
+            db.execute("DELETE FROM weekly_contacts WHERE id=?", (contact["id"],))
+        else:
+            db.execute("UPDATE weekly_contacts SET student_id=? WHERE id=?", (target_id, contact["id"]))
+    db.execute("UPDATE students SET merged_into=? WHERE id=?", (target_id, source_id))
+    return True
 
 
 def read_sheet(upload):
@@ -149,11 +197,23 @@ def import_students(db, rows, name_index, phone_index=None, email_index=None, er
         row[0].casefold()
         for row in db.execute("SELECT full_name FROM students WHERE active=1")
     }
+    archived_names = {
+        " ".join(row[0].split()).casefold()
+        for row in db.execute("SELECT full_name FROM students WHERE active=0")
+    }
     added = skipped = 0
     for line_number, row in enumerate(rows, start=2):
         name = str(row[name_index] or "").strip() if name_index < len(row) else ""
         normalized_name = " ".join(name.split())
-        if not normalized_name or normalized_name.casefold() in existing:
+        if not normalized_name:
+            skipped += 1
+            continue
+        if normalized_name.casefold() in archived_names:
+            if errors is not None:
+                errors.append(f"Linha {line_number}: nome também encontrado em alunos arquivados; confira antes de reativar ou cadastrar.")
+            skipped += 1
+            continue
+        if normalized_name.casefold() in existing:
             skipped += 1
             continue
         phone = str(row[phone_index] or "").strip() if phone_index is not None and phone_index < len(row) else ""

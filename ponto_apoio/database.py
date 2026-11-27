@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS students (
     notes TEXT,
     active INTEGER NOT NULL DEFAULT 1,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    archived_at TEXT
+    archived_at TEXT,
+    merged_into INTEGER REFERENCES students(id)
 );
 CREATE TABLE IF NOT EXISTS campaigns (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -59,6 +60,13 @@ CREATE TABLE IF NOT EXISTS weekly_contacts (
     UNIQUE(week_start, day, student_id),
     FOREIGN KEY(week_start, day) REFERENCES weekly_goals(week_start, day)
 );
+CREATE TABLE IF NOT EXISTS student_merges (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    source_id INTEGER NOT NULL REFERENCES students(id),
+    target_id INTEGER NOT NULL REFERENCES students(id),
+    snapshot TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 """
 
 
@@ -89,6 +97,9 @@ def init_db():
     """Cria as tabelas e aplica atualizações compatíveis ao banco existente."""
     db = get_db()
     db.executescript(SCHEMA)
+    student_columns = {row[1] for row in db.execute("PRAGMA table_info(students)")}
+    if "merged_into" not in student_columns:
+        db.execute("ALTER TABLE students ADD COLUMN merged_into INTEGER REFERENCES students(id)")
     columns = {row[1] for row in db.execute("PRAGMA table_info(campaigns)")}
     if "status" not in columns:
         db.execute("ALTER TABLE campaigns ADD COLUMN status TEXT NOT NULL DEFAULT 'open'")
