@@ -87,12 +87,15 @@ def register_student_routes(app):
             flash(str(error), "error")
             return redirect(url_for("students"))
         duplicate = duplicate_student(db, full_name, student_id)
-        update_student(
+        changed = update_student(
             db, student_id, full_name, request.form.get("phone", ""),
             request.form.get("email", ""), request.form.get("program", "BIU MLP"),
             request.form.get("notes", ""),
         )
         db.commit()
+        if not changed:
+            flash("Aluno ativo não encontrado; nenhuma alteração foi salva.", "error")
+            return redirect(url_for("students"))
         if duplicate:
             flash("Aviso: já existe outro aluno ativo com esse nome. Confira se os cadastros correspondem a pessoas diferentes.", "error")
         flash("Dados do aluno atualizados.", "success")
@@ -101,9 +104,9 @@ def register_student_routes(app):
     @app.post("/students/<int:student_id>/archive", endpoint="archive_student")
     def archive_student_route(student_id):
         db = get_db()
-        archive_student(db, student_id, datetime.now().isoformat(timespec="seconds"))
+        changed = archive_student(db, student_id, datetime.now().isoformat(timespec="seconds"))
         db.commit()
-        flash("Aluno arquivado. O histórico foi preservado.", "success")
+        flash("Aluno arquivado. O histórico foi preservado." if changed else "Aluno ativo não encontrado ou já arquivado.", "success" if changed else "error")
         return redirect(url_for("students"))
 
     @app.post("/students/<int:student_id>/restore")

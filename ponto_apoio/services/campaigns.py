@@ -73,16 +73,18 @@ def list_campaign_students(db, campaign_id):
 
 def set_send_status(db, campaign_id, student_id, status, timestamp):
     """Atualiza o status de um destinatário e registra os horários relevantes."""
-    db.execute(
+    cursor = db.execute(
         """
         UPDATE sends
         SET status=?,
             opened_at=CASE WHEN ?='opened' THEN ? ELSE opened_at END,
             sent_at=CASE WHEN ?='sent' THEN ? ELSE sent_at END
         WHERE campaign_id=? AND student_id=?
+          AND EXISTS (SELECT 1 FROM campaigns WHERE id=? AND archived_at IS NULL)
         """,
-        (status, status, timestamp, status, timestamp, campaign_id, student_id),
+        (status, status, timestamp, status, timestamp, campaign_id, student_id, campaign_id),
     )
+    return cursor.rowcount > 0
 
 
 def sync_campaign(db, campaign_id):
@@ -98,16 +100,16 @@ def sync_campaign(db, campaign_id):
 
 
 def set_campaign_status(db, campaign_id, status):
-    db.execute(
+    return db.execute(
         "UPDATE campaigns SET status=? WHERE id=? AND archived_at IS NULL",
         (status, campaign_id),
-    )
+    ).rowcount > 0
 
 
 def archive_campaign(db, campaign_id, archived_at):
-    db.execute(
-        "UPDATE campaigns SET archived_at=? WHERE id=?", (archived_at, campaign_id)
-    )
+    return db.execute(
+        "UPDATE campaigns SET archived_at=? WHERE id=? AND archived_at IS NULL", (archived_at, campaign_id)
+    ).rowcount > 0
 
 
 def restore_campaign(db, campaign_id):

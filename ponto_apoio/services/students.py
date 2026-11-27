@@ -93,7 +93,7 @@ def add_student(db, full_name, phone="", email="", program="BIU MLP", notes=""):
 def update_student(db, student_id, full_name, phone, email, program, notes):
     """Atualiza as informações editáveis de um aluno ativo."""
     normalized_name = " ".join(full_name.strip().split())
-    db.execute(
+    cursor = db.execute(
         """
         UPDATE students
         SET full_name=?, first_name=?, phone=?, email=?, program=?, notes=?
@@ -109,14 +109,15 @@ def update_student(db, student_id, full_name, phone, email, program, notes):
             student_id,
         ),
     )
+    return cursor.rowcount > 0
 
 
 def archive_student(db, student_id, archived_at):
     """Arquiva um aluno sem apagar o histórico de envios."""
-    db.execute(
-        "UPDATE students SET active=0, archived_at=? WHERE id=?",
+    return db.execute(
+        "UPDATE students SET active=0, archived_at=? WHERE id=? AND active=1",
         (archived_at, student_id),
-    )
+    ).rowcount > 0
 
 
 def restore_student(db, student_id):

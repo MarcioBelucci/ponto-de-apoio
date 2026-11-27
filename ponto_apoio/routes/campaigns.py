@@ -106,8 +106,13 @@ def register_campaign_routes(app):
             flash("Situação inválida.", "error")
             return redirect(destination)
         db = get_db()
-        update_send_status(db, campaign_id, student_id, status, datetime.now().isoformat(timespec="seconds"))
+        changed = update_send_status(db, campaign_id, student_id, status, datetime.now().isoformat(timespec="seconds"))
         db.commit()
+        if not changed:
+            flash("Destinatário ou outreach não encontrado, ou outreach arquivado.", "error")
+            if not campaign_by_id(db, campaign_id):
+                return redirect(url_for("campaigns"))
+            return redirect(destination)
         flash("Situação atualizada.", "success")
         return redirect(destination)
 
@@ -133,8 +138,11 @@ def register_campaign_routes(app):
             flash("Situação inválida.", "error")
             return redirect(url_for("campaign_detail", campaign_id=campaign_id))
         db = get_db()
-        update_campaign_status(db, campaign_id, status)
+        changed = update_campaign_status(db, campaign_id, status)
         db.commit()
+        if not changed:
+            flash("Outreach não encontrado ou arquivado.", "error")
+            return redirect(url_for("campaigns"))
         message = "Outreach reaberto. Alunos novos voltarão a ser incluídos automaticamente." if status == "open" else "Outreach encerrado. O histórico foi preservado e novos alunos não serão incluídos."
         flash(message, "success")
         return redirect(url_for("campaign_detail", campaign_id=campaign_id))
@@ -142,7 +150,7 @@ def register_campaign_routes(app):
     @app.post("/campaigns/<int:campaign_id>/archive", endpoint="archive_campaign")
     def archive_campaign_route(campaign_id):
         db = get_db()
-        archive_campaign(db, campaign_id, datetime.now().isoformat(timespec="seconds"))
+        changed = archive_campaign(db, campaign_id, datetime.now().isoformat(timespec="seconds"))
         db.commit()
-        flash("Outreach arquivado. O histórico foi preservado.", "success")
+        flash("Outreach arquivado. O histórico foi preservado." if changed else "Outreach não encontrado ou já arquivado.", "success" if changed else "error")
         return redirect(url_for("campaigns"))
